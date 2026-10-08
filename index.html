@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pylon – Pilotez vos cartes ESP32 et Raspberry Pi à distance</title>
+<meta name="description" content="Générez une paire de clés, collez-la dans votre code et contrôlez votre carte en temps réel depuis n'importe quel réseau.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#EBF0F5;--card:#fff;--ink:#14212F;--mute:#5B6B7C;--line:#D5DDE6;--blue:#2A55E5;--ok:#15935F;--bad:#B4412F;
+--head:"Bricolage Grotesque",system-ui,sans-serif;--body:"IBM Plex Sans",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace}
+*{box-sizing:border-box}[hidden]{display:none!important}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.6 var(--body)}
+h1,h2,h3{font-family:var(--head);line-height:1.12;margin:0 0 .5em;letter-spacing:-.02em}
+a{color:var(--blue)}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.top{display:flex;justify-content:space-between;align-items:center;padding:18px clamp(20px,5vw,64px)}
+.top nav{display:flex;gap:22px;align-items:center}.top nav a{color:var(--ink);text-decoration:none;font-weight:500}
+.brand{display:flex;align-items:center;gap:8px;font:800 22px var(--head);color:var(--ink);text-decoration:none}
+.btn{font:500 15px var(--body);padding:10px 18px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--ink)}.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}.btn.primary:hover{background:#1f43c0}
+.btn.small{padding:6px 12px;font-size:14px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.hero{display:grid;grid-template-columns:1.05fr 1fr;gap:clamp(24px,5vw,72px);align-items:center;padding:clamp(32px,7vw,96px) clamp(20px,5vw,64px)}
+.hero h1{font-size:clamp(2.4rem,5.4vw,4.4rem);font-weight:800}
+.lead{font-size:1.15rem;color:var(--mute);max-width:46ch;margin:0 0 28px}
+.code{background:var(--ink);color:#DCE6F2;font:400 14px/1.75 var(--mono);padding:24px;border-radius:14px;overflow-x:auto;margin:0;white-space:pre}
+.code .c{color:#7F93A9}.code b{color:#7DE0B0;font-weight:500}
+.steps,.compat{padding:56px clamp(20px,5vw,64px);max-width:1200px}
+.steps h2,.compat h2{font-size:clamp(1.6rem,3vw,2.2rem);max-width:24ch}
+.steps ol{list-style:none;counter-reset:s;margin:32px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--ink)}
+.steps li{counter-increment:s;padding:22px 24px 0 0}
+.steps li::before{content:counter(s);font:500 14px var(--mono);color:var(--blue)}
+.steps h3{font-size:1.2rem;margin:.4em 0}.steps p,.compat p{color:var(--mute);margin:0;max-width:44ch}
+footer{padding:40px clamp(20px,5vw,64px);color:var(--mute);font-size:14px}
+/* tableau de bord */
+#app{padding:8px clamp(20px,5vw,64px) 48px;max-width:1280px;margin:auto}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.bar h1{font-size:2rem;margin:0}.bar code{font:14px var(--mono);color:var(--mute)}
+.pill{padding:6px 14px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:14px;display:flex;align-items:center;gap:8px}
+.pill::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--bad)}
+.pill.on::before{background:var(--ok);animation:pulse 2s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 5px rgba(21,147,95,.2)}}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px;min-width:0}
+.panel.wide{grid-column:span 2}.panel h2{font-size:1.15rem}
+.vals{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.val{border-left:3px solid var(--blue);padding:2px 0 2px 12px;display:flex;flex-direction:column}
+.val .k{font:14px var(--mono);color:var(--mute)}.val b{font:700 1.8rem var(--head);word-break:break-all}.val time{font-size:12px;color:var(--mute)}
+.empty,.hint{color:var(--mute);font-size:14px;margin:8px 0 0}
+label{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:500;margin-bottom:14px}
+input{font:15px var(--body);padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+.phead{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:14px}.phead h2{margin:0;margin-right:auto}
+.tabs{display:flex;background:var(--paper);border-radius:8px;padding:3px}
+.tabs button{border:0;background:none;padding:6px 14px;border-radius:6px;font:500 14px var(--body);cursor:pointer;color:var(--mute)}
+.tabs [aria-pressed=true]{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(20,33,47,.15)}
+#snip{max-height:340px;font-size:13px}
+.log{list-style:none;margin:0;padding:0;max-height:300px;overflow:auto;font:13px/1.5 var(--mono)}
+.log li{padding:6px 0;border-bottom:1px solid var(--line);display:flex;gap:10px}.log .in{color:var(--ok)}.log .out{color:var(--blue)}
+dialog{border:0;border-radius:14px;padding:0;width:min(420px,92vw);box-shadow:0 20px 60px rgba(20,33,47,.3)}
+dialog::backdrop{background:rgba(20,33,47,.5)}.authform{padding:28px}.authform h2{font-size:1.5rem}
+#e-create,#e-login{color:var(--bad)}
+@media(max-width:860px){.hero{grid-template-columns:1fr}.steps ol{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.panel.wide{grid-column:auto}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2 5 22M12 2l7 20M8 14h8M6.5 19h11M12 2v4"/></svg>Pylon</a>
+  <nav><a href="#fonctionnement" id="navdoc">Fonctionnement</a><button class="btn" id="open">Ouvrir mon espace</button></nav>
+</header>
+
+<main id="landing">
+  <section class="hero">
+    <div>
+      <h1>Votre carte répond, où qu'elle soit.</h1>
+      <p class="lead">Contrôlez un ESP32 ou un Raspberry Pi depuis n'importe quel réseau. Pas de bibliothèque à installer : vous collez deux clés et une adresse dans votre code.</p>
+      <div class="row"><button class="btn primary" data-auth="create">Créer un projet</button><button class="btn" data-auth="login">J'ai déjà mes clés</button></div>
+    </div>
+    <pre class="code" aria-label="Exemple de configuration"><span class="c">// Dans votre sketch Arduino</span>
+const char* URL         = "https://pylon-api.onrender.com";
+const char* PUBLIC_KEY  = "pk_8f3a1c52d9e04b17";
+const char* PRIVATE_KEY = "sk_••••••••••••••••••••";
+
+<span class="c">// Sur le site, la valeur arrive aussitôt</span>
+temperature   <b>23.4</b>     il y a 2 s
+led           <b>1</b>        commande envoyée</pre>
+  </section>
+
+  <section class="steps" id="fonctionnement">
+    <h2>De la création du projet à la première commande</h2>
+    <ol>
+      <li><h3>Générez vos clés</h3><p>Créez un projet : le site vous donne une clé publique, une clé privée et l'adresse de votre serveur.</p></li>
+      <li><h3>Collez-les dans votre code</h3><p>Une requête HTTPS suffit. Le code prêt à copier est fourni pour Arduino et pour Python.</p></li>
+      <li><h3>Pilotez en temps réel</h3><p>Les valeurs de la carte s'affichent en direct et vos commandes lui arrivent en moins d'une seconde.</p></li>
+    </ol>
+  </section>
+
+  <section class="compat">
+    <h2>Fonctionne avec tout ce qui sait faire une requête HTTPS</h2>
+    <p>ESP32, ESP8266, Raspberry Pi, Pico W. La carte et vous pouvez être sur des réseaux différents, chez vous, au bureau ou en 4G.</p>
+  </section>
+</main>
+
+<main id="app" hidden>
+  <div class="bar">
+    <div><h1 id="pname"></h1><code id="pkshow"></code></div>
+    <div class="row"><span id="pill" class="pill">Carte hors ligne</span><button class="btn" id="quit">Quitter</button></div>
+  </div>
+  <div class="grid">
+    <section class="panel wide"><h2>Valeurs reçues</h2><div id="values" class="vals"></div></section>
+    <section class="panel">
+      <h2>Envoyer une commande</h2>
+      <form id="cmd">
+        <label>Nom<input name="name" placeholder="led" required autocomplete="off"></label>
+        <label>Valeur<input name="value" placeholder="1" autocomplete="off"></label>
+        <button class="btn primary">Envoyer</button>
+      </form>
+      <p id="cmdmsg" class="hint" role="status"></p>
+    </section>
+    <section class="panel wide">
+      <div class="phead">
+        <h2>Code de connexion</h2>
+        <div class="tabs"><button data-lang="arduino" aria-pressed="true">Arduino</button><button data-lang="python" aria-pressed="false">Raspberry Pi</button></div>
+        <button class="btn small" id="copy">Copier</button>
+      </div>
+      <pre id="snip" class="code"></pre>
+    </section>
+    <section class="panel"><h2>Journal</h2><ul id="log" class="log"></ul></section>
+  </div>
+</main>
+
+<dialog id="auth">
+  <form method="dialog" id="f-create" class="authform">
+    <h2>Créer un projet</h2>
+    <label>Nom du projet<input name="name" placeholder="Serre du jardin" required maxlength="40"></label>
+    <p class="hint" id="e-create" role="alert"></p>
+    <div class="row"><button class="btn primary">Générer mes clés</button><button type="button" class="btn" data-close>Annuler</button></div>
+    <p class="hint">Déjà un projet ? <a href="#" data-auth="login">Utiliser mes clés</a></p>
+  </form>
+  <form method="dialog" id="f-login" class="authform" hidden>
+    <h2>Ouvrir mon espace</h2>
+    <label>Clé publique<input name="pk" placeholder="pk_…" required autocomplete="off"></label>
+    <label>Clé privée<input name="sk" type="password" placeholder="sk_…" required autocomplete="off"></label>
+    <p class="hint" id="e-login" role="alert"></p>
+    <div class="row"><button class="btn primary">Ouvrir</button><button type="button" class="btn" data-close>Annuler</button></div>
+    <p class="hint">Pas encore de projet ? <a href="#" data-auth="create">En créer un</a></p>
+  </form>
+</dialog>
+
+<footer>© Pylon</footer>
+<script>
+// Certificat racine (PEM) de votre serveur, partagé par tous les utilisateurs.
+// Obtenez-le avec : openssl s_client -showcerts -connect VOTRE-APP.onrender.com:443 </dev/null
+const SITE_CA = `-----BEGIN CERTIFICATE-----
+MIIB3DCCAYOgAwIBAgINAgPlfvU/k/2lCSGypjAKBggqhkjOPQQDAjBQMSQwIgYDVQQLExtHbG9i
+YWxTaWduIEVDQyBSb290IENBIC0gUjQxEzARBgNVBAoTCkdsb2JhbFNpZ24xEzARBgNVBAMTCkds
+b2JhbFNpZ24wHhcNMTIxMTEzMDAwMDAwWhcNMzgwMTE5MDMxNDA3WjBQMSQwIgYDVQQLExtHbG9i
+YWxTaWduIEVDQyBSb290IENBIC0gUjQxEzARBgNVBAoTCkdsb2JhbFNpZ24xEzARBgNVBAMTCkds
+b2JhbFNpZ24wWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAAS4xnnTj2wlDp8uORkcA6SumuU5BwkW
+ymOxuYb4ilfBV85C+nOh92VC/x7BALJucw7/xyHlGKSq2XE/qNS5zowdo0IwQDAOBgNVHQ8BAf8E
+BAMCAYYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUVLB7rUW44kB/+wpu+74zyTyjhNUwCgYI
+KoZIzj0EAwIDRwAwRAIgIk90crlgr/HmnKAWBVBfw147bmF0774BxL4YSFlhgjICICadVGNA3jdg
+UM/I2O2dgq43mLyjj0xMqTQrbO/7lZsm
+-----END CERTIFICATE-----`;
+// URL de votre backend Render (sans slash final)
+const API = (window.PYLON_API || 'https://pylon-51ch.onrender.com').replace(/\/$/, '');
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+let keys = null, ws = null, rt = null, state = {}, log = [], lang = 'arduino';
+try { keys = JSON.parse(localStorage.getItem('pylon')); } catch {}
+const store = () => { try { keys ? localStorage.setItem('pylon', JSON.stringify(keys)) : localStorage.removeItem('pylon'); } catch {} };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const hm = t => new Date(t).toLocaleTimeString('fr-FR');
+const show = v => typeof v === 'string' ? v : JSON.stringify(v);
+
+async function api(path, opts = {}) {
+  const r = await fetch(API + path, { ...opts, headers: { 'Content-Type': 'application/json', 'x-public-key': keys?.publicKey || '', 'x-private-key': keys?.privateKey || '' } });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || 'Le serveur ne répond pas. Réessayez dans un instant.');
+  return j;
+}
+
+const snippets = {
+  arduino: k => { const ca = SITE_CA.trim(); return `#include <WiFi.h>
+#include <HTTPClient.h>
+#include <WiFiClientSecure.h>
+
+const char* WIFI_SSID   = "votre_wifi";
+const char* WIFI_PASS   = "votre_mot_de_passe";
+const char* URL         = "${API}";
+const char* PUBLIC_KEY  = "${k.publicKey}";
+const char* PRIVATE_KEY = "${k.privateKey}";
+
+${ca ? 'const char* ROOT_CA = R"CERT(\n' + ca + '\n)CERT";\n' : ''}
+WiFiClientSecure tls;
+
+String call(const char* path, const char* body = nullptr) {
+  HTTPClient http;
+  http.begin(tls, String(URL) + path);
+  http.addHeader("x-public-key", PUBLIC_KEY);
+  http.addHeader("x-private-key", PRIVATE_KEY);
+  http.addHeader("Content-Type", "application/json");
+  int code = body ? http.POST(body) : http.GET();
+  String out = code > 0 ? http.getString() : "";
+  http.end();
+  return out;
+}
+
+void setup() {
+  pinMode(2, OUTPUT);
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
+  while (WiFi.status() != WL_CONNECTED) delay(300);
+  configTime(0, 0, "pool.ntp.org");
+  ${ca ? 'tls.setCACert(ROOT_CA);' : 'tls.setInsecure();  // remplacez par setCACert(ROOT_CA)'}
+}
+
+void loop() {
+  call("/api/device/data", "{\\"temperature\\":21.5}");
+  String cmds = call("/api/device/commands?format=text&wait=4");
+  if (cmds.indexOf("led=1") >= 0) digitalWrite(2, HIGH);
+  if (cmds.indexOf("led=0") >= 0) digitalWrite(2, LOW);
+}`; },
+  python: k => `import requests
+
+URL = "${API}"
+H = {"x-public-key": "${k.publicKey}", "x-private-key": "${k.privateKey}"}
+
+while True:
+    requests.post(URL + "/api/device/data", json={"temperature": 21.5}, headers=H)
+    r = requests.get(URL + "/api/device/commands", params={"wait": 4}, headers=H)
+    for c in r.json()["commands"]:
+        print(c["name"], c["value"])  # ex. led 1`
+};
+
+function render() {
+  const e = Object.entries(state);
+  $('#values').innerHTML = e.length
+    ? e.map(([k, o]) => `<div class="val"><span class="k">${esc(k)}</span><b>${esc(show(o.v))}</b><time>${hm(o.t)}</time></div>`).join('')
+    : '<p class="empty">Aucune valeur reçue pour l\'instant. Copiez le code ci-dessous dans votre carte : les valeurs apparaissent dès le premier envoi.</p>';
+  $('#log').innerHTML = log.slice(-30).reverse().map(l => `<li><span>${hm(l.t)}</span><span class="${l.kind}">${l.kind === 'in' ? 'reçu' : 'envoyé'}</span><span>${esc(show(l.data))}</span></li>`).join('') || '<li class="empty">Rien pour le moment.</li>';
+  $('#snip').textContent = snippets[lang](keys);
+}
+const setOnline = on => { const p = $('#pill'); p.classList.toggle('on', !!on); p.textContent = on ? 'Carte en ligne' : 'Carte hors ligne'; };
+
+function connect() {
+  clearTimeout(rt);
+  if (ws) { ws.onclose = null; ws.close(); }
+  ws = new WebSocket(API.replace(/^http/, 'ws') + `/ws?pk=${encodeURIComponent(keys.publicKey)}&sk=${encodeURIComponent(keys.privateKey)}`);
+  ws.onmessage = ev => {
+    const m = JSON.parse(ev.data);
+    if (m.type === 'snapshot') { state = m.state; log = m.log; setOnline(m.online); }
+    if (m.type === 'data') { for (const k in m.data) state[k] = { v: m.data[k], t: m.t }; log.push({ t: m.t, kind: 'in', data: m.data }); }
+    if (m.type === 'command') log.push({ t: m.t, kind: 'out', data: m.data });
+    if (m.type === 'status') setOnline(m.online);
+    render();
+  };
+  ws.onclose = () => { setOnline(false); if (keys) rt = setTimeout(connect, 2500); };
+}
+
+function openApp(name) {
+  $('#landing').hidden = true; $('#app').hidden = false;
+  $('#pname').textContent = name || 'Mon projet';
+  $('#pkshow').textContent = keys.publicKey;
+  render(); connect();
+}
+function quit() {
+  keys = null; store();
+  if (ws) { ws.onclose = null; ws.close(); }
+  $('#app').hidden = true; $('#landing').hidden = false;
+}
+
+function openAuth(mode) {
+  $('#f-create').hidden = mode !== 'create'; $('#f-login').hidden = mode !== 'login';
+  if (!$('#auth').open) $('#auth').showModal();
+}
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-auth]'); if (a) { e.preventDefault(); openAuth(a.dataset.auth); }
+  if (e.target.closest('[data-close]')) $('#auth').close();
+});
+$('#open').onclick = () => keys ? openApp() : openAuth('login');
+$('#quit').onclick = quit;
+
+$('#f-create').onsubmit = async e => {
+  e.preventDefault(); $('#e-create').textContent = '';
+  try {
+    const r = await api('/api/projects', { method: 'POST', body: JSON.stringify({ name: e.target.name.value }) });
+    keys = { publicKey: r.publicKey, privateKey: r.privateKey, name: r.name }; store();
+    $('#auth').close(); openApp(r.name);
+  } catch (err) { $('#e-create').textContent = err.message; }
+};
+$('#f-login').onsubmit = async e => {
+  e.preventDefault(); $('#e-login').textContent = '';
+  keys = { publicKey: e.target.pk.value.trim(), privateKey: e.target.sk.value.trim() };
+  try {
+    const r = await api('/api/state');
+    keys.name = r.name; store(); $('#auth').close(); openApp(r.name);
+  } catch (err) { keys = null; $('#e-login').textContent = err.message; }
+};
+
+$('#cmd').onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, msg = $('#cmdmsg');
+  try {
+    const r = await api('/api/command', { method: 'POST', body: JSON.stringify({ name: f.name.value, value: f.value.value }) });
+    msg.textContent = r.online ? 'Commande envoyée.' : 'Commande en attente : la carte la recevra à sa prochaine connexion.';
+  } catch (err) { msg.textContent = err.message; }
+};
+$$('[data-lang]').forEach(b => b.onclick = () => { lang = b.dataset.lang; $$('[data-lang]').forEach(x => x.setAttribute('aria-pressed', x === b)); render(); });
+$('#copy').onclick = async e => { await navigator.clipboard.writeText($('#snip').textContent); e.target.textContent = 'Copié'; setTimeout(() => e.target.textContent = 'Copier', 1500); };
+
+if (keys) openApp(keys.name);
+</script>
+</body>
+</html>
