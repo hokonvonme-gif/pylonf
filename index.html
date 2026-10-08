@@ -87,6 +87,22 @@ dialog::backdrop{background:rgba(3,6,12,.7);backdrop-filter:blur(4px)}
 .dtabs{display:flex;margin-bottom:22px}.dtabs button{flex:1}
 @media(max-width:900px){.hero,.feats,.grid{grid-template-columns:1fr}.wide{grid-column:auto}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+select{font:15px var(--body);padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:#0A1120;color:var(--tx);max-width:100%}
+.full{grid-column:1/-1}.inl{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}.inl label{margin:0;flex:1 1 90px}
+.spark{width:100%;height:28px;color:var(--b);margin-top:8px}
+.cam{border-radius:14px;overflow:hidden;background:#060A12;border:1px solid var(--line);min-height:120px;display:grid;place-items:center}.cam img{width:100%;display:block}.cam p{padding:30px;text-align:center}
+.ctrls{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
+.ctl{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 38px 14px 16px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03);position:relative}
+.ctl.col{flex-direction:column;align-items:stretch}.ctl b{color:var(--b)}
+.cx{position:absolute;top:6px;right:9px;background:none;border:0;color:var(--mu);cursor:pointer;font-size:18px;line-height:1}.cx:hover{color:var(--bad)}
+.sw{margin:0;flex-direction:row;position:relative;width:46px;height:26px;flex:none}.sw input{opacity:0;position:absolute;inset:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1}
+.sw i{position:absolute;inset:0;border-radius:99px;background:#2A3856;transition:.2s}.sw i::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s}
+.sw input:checked+i{background:linear-gradient(135deg,var(--a),var(--b))}.sw input:checked+i::after{transform:translateX(20px)}
+input[type=range]{padding:0;accent-color:var(--b);width:100%}
+.dpad{display:grid;grid-template-columns:repeat(3,58px);grid-template-areas:". up ." "lf st rt" ". dn .";gap:8px;justify-content:center;touch-action:none}
+.dpad button{height:54px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--tx);font-size:18px;cursor:pointer;user-select:none;-webkit-user-select:none;touch-action:none}
+.dpad button:nth-child(1){grid-area:up}.dpad button:nth-child(2){grid-area:lf}.dpad button:nth-child(3){grid-area:st}.dpad button:nth-child(4){grid-area:rt}.dpad button:nth-child(5){grid-area:dn}
+.dpad button:active{background:linear-gradient(135deg,var(--a),var(--b));color:#04101F}
 </style>
 </head>
 <body>
@@ -137,14 +153,20 @@ led           <b>1</b>        commande envoyée</pre></div>
   </div>
   <div class="keybox" id="keybox"></div>
   <div class="grid">
+    <section class="panel full"><div class="ph"><h2>Page web de l'appareil</h2><span id="tpill" class="pill">Agent hors ligne</span><button class="btn primary sm" id="topen">Ouvrir la page</button></div>
+      <p class="muted" style="margin:0;font-size:14px">Rendez accessible de partout la page que votre ESP32 ou Raspberry Pi affiche sur son adresse IP locale. Lancez l'agent (exemple « Page web locale » ci-dessous), puis cliquez sur « Ouvrir la page ».</p></section>
     <section class="panel wide"><h2>Valeurs reçues</h2><div id="values" class="vals"></div></section>
-    <section class="panel"><h2>Envoyer une commande</h2>
-      <form id="cmd"><label>Nom<input name="name" placeholder="led" required autocomplete="off"></label><label>Valeur<input name="value" placeholder="1" autocomplete="off"></label><button class="btn primary">Envoyer</button></form>
+    <section class="panel">
+      <div class="ph"><h2>Contrôles</h2><button class="btn sm" id="addc">+ Ajouter</button></div>
+      <div id="controls" class="ctrls"></div>
+      <form id="cmd" class="inl"><label>Commande libre<input name="name" placeholder="nom" required autocomplete="off"></label><label>Valeur<input name="value" placeholder="1" autocomplete="off"></label><button class="btn sm primary">Envoyer</button></form>
       <p id="cmdmsg" class="muted" style="font-size:14px;margin:12px 0 0" role="status"></p></section>
-    <section class="panel wide">
-      <div class="ph"><h2>Code de connexion</h2><div class="tabs"><button data-lang="arduino" aria-pressed="true">Arduino</button><button data-lang="python" aria-pressed="false">Raspberry Pi</button></div><button class="btn sm" id="copy">Copier</button></div>
-      <pre id="snip" class="code"></pre></section>
+    <section class="panel wide"><h2>Caméra</h2><div class="cam"><img id="cam" alt="Image de la caméra" hidden><p id="camempty" class="empty">Aucune image reçue. Utilisez l'exemple « Caméra » ci-dessous (ESP32-CAM ou Raspberry Pi).</p></div></section>
     <section class="panel"><h2>Journal</h2><ul id="log" class="log"></ul></section>
+    <section class="panel full">
+      <div class="ph"><h2>Exemples de code</h2><select id="ex" aria-label="Choisir un exemple"></select><button class="btn sm" id="copy">Copier</button></div>
+      <p id="exdesc" class="muted" style="margin:0 0 14px;font-size:14px"></p>
+      <pre id="snip" class="code"></pre></section>
   </div>
 </main>
 
@@ -154,6 +176,16 @@ led           <b>1</b>        commande envoyée</pre></div>
   <label>Mot de passe<input name="password" type="password" required minlength="8" autocomplete="current-password" placeholder="8 caractères minimum"></label>
   <p class="err" id="e-auth" role="alert"></p>
   <button class="btn primary" id="auth-go">Se connecter</button>
+</form></dialog>
+
+<dialog id="ctldlg"><form id="f-ctl" class="dform" method="dialog">
+  <h2>Ajouter un contrôle</h2>
+  <label>Type<select name="ctype"><option value="button">Bouton</option><option value="switch">Interrupteur (0 / 1)</option><option value="slider">Curseur</option><option value="dpad">Pavé directionnel (voiture, robot)</option></select></label>
+  <label>Texte affiché<input name="label" placeholder="Lumière du salon" maxlength="30" autocomplete="off"></label>
+  <label>Nom de la commande<input name="cname" placeholder="relais" required maxlength="40" autocomplete="off"></label>
+  <div class="row"><label style="flex:1">Min (curseur)<input name="min" type="number" placeholder="0"></label><label style="flex:1">Max (curseur)<input name="max" type="number" placeholder="100"></label></div>
+  <label>Valeur envoyée (bouton)<input name="value" placeholder="1" autocomplete="off"></label>
+  <div class="row"><button class="btn primary" style="flex:1">Ajouter</button><button type="button" class="btn" id="ctl-cancel">Annuler</button></div>
 </form></dialog>
 
 <dialog id="newdlg"><form id="f-new" class="dform" method="dialog">
@@ -180,23 +212,25 @@ UM/I2O2dgq43mLyjj0xMqTQrbO/7lZsm
 -----END CERTIFICATE-----`;
 // URL de votre backend Render (sans slash final)
 const API = (window.PYLON_API || 'https://pylon-51ch.onrender.com').replace(/\/$/, '');
-const snippets = {
-  arduino: k => { const ca = SITE_CA.trim(); return `#include <WiFi.h>
+const ex_ca = () => { const ca = SITE_CA.trim(); return { decl: ca ? 'const char* ROOT_CA = R"CERT(\n' + ca + '\n)CERT";\n' : '', use: ca ? 'tls.setCACert(ROOT_CA);' : 'tls.setInsecure();  // remplacez par setCACert(ROOT_CA)' }; };
+const AH = (k, inc = '') => { const c = ex_ca(); return `#include <WiFi.h>
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
-
+${inc}
 const char* WIFI_SSID   = "votre_wifi";
 const char* WIFI_PASS   = "votre_mot_de_passe";
 const char* URL         = "${API}";
 const char* PUBLIC_KEY  = "${k.publicKey}";
 const char* PRIVATE_KEY = "${k.privateKey}";
 
-${ca ? 'const char* ROOT_CA = R"CERT(\n' + ca + '\n)CERT";\n' : ''}
+${c.decl}
 WiFiClientSecure tls;
 
 String call(const char* path, const char* body = nullptr) {
   HTTPClient http;
   http.begin(tls, String(URL) + path);
+  http.setReuse(true);
+  http.setTimeout(30000);
   http.addHeader("x-public-key", PUBLIC_KEY);
   http.addHeader("x-private-key", PRIVATE_KEY);
   http.addHeader("Content-Type", "application/json");
@@ -205,36 +239,360 @@ String call(const char* path, const char* body = nullptr) {
   http.end();
   return out;
 }
+void sendData(String json) { call("/api/device/data", json.c_str()); }
+String poll(int wait) { return call(("/api/device/commands?format=text&wait=" + String(wait)).c_str()); }
+
+// Dernière valeur reçue pour la commande "name" ("" si aucune)
+String cmd(const String& all, const char* name) {
+  String key = String(name) + "=", out = "";
+  int pos = 0;
+  while (pos < (int)all.length()) {
+    int e = all.indexOf('\\n', pos); if (e < 0) e = all.length();
+    if (all.startsWith(key, pos)) out = all.substring(pos + key.length(), e);
+    pos = e + 1;
+  }
+  return out;
+}
+
+void wifiBegin() {
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
+  while (WiFi.status() != WL_CONNECTED) delay(300);
+  configTime(0, 0, "pool.ntp.org");
+  ${c.use}
+}
+
+`; };
+const PH = (k, inc = '') => `import time, requests
+${inc}
+URL = "${API}"
+H = {"x-public-key": "${k.publicKey}", "x-private-key": "${k.privateKey}"}
+
+def send(data):
+    try:
+        requests.post(URL + "/api/device/data", json=data, headers=H, timeout=10)
+    except requests.RequestException:
+        pass
+
+def poll(wait=5):
+    try:
+        r = requests.get(URL + "/api/device/commands", params={"wait": wait}, headers=H, timeout=wait + 10)
+        return {c["name"]: c["value"] for c in r.json()["commands"]}  # la dernière valeur l'emporte
+    except requests.RequestException:
+        time.sleep(1)
+        return {}
+
+`;
+const CAM_PINS = `#include "esp_camera.h"
+#define PWDN_GPIO_NUM 32
+#define RESET_GPIO_NUM -1
+#define XCLK_GPIO_NUM 0
+#define SIOD_GPIO_NUM 26
+#define SIOC_GPIO_NUM 27
+#define Y9_GPIO_NUM 35
+#define Y8_GPIO_NUM 34
+#define Y7_GPIO_NUM 39
+#define Y6_GPIO_NUM 36
+#define Y5_GPIO_NUM 21
+#define Y4_GPIO_NUM 19
+#define Y3_GPIO_NUM 18
+#define Y2_GPIO_NUM 5
+#define VSYNC_GPIO_NUM 25
+#define HREF_GPIO_NUM 23
+#define PCLK_GPIO_NUM 22`;
+const EXAMPLES = [
+  { id: 'tunnel-pi', title: "Page web locale · Raspberry Pi (agent Python)", desc: "À lancer sur le Raspberry Pi lui-même (pip install requests) : CIBLE = http://localhost:PORT de votre application web. Aucune autre machine n'est nécessaire. Peut aussi servir de pont vers un ESP32 du même réseau. Puis cliquez sur « Ouvrir la page ».",
+    code: k => `import time, base64, threading, requests
+
+URL = "${API}"
+H = {"x-public-key": "${k.publicKey}", "x-private-key": "${k.privateKey}"}
+CIBLE = "http://192.168.1.50"   # adresse locale de votre page : l'ESP32, ou http://localhost:5000 pour une appli de ce Raspberry Pi
+
+def traiter(job):
+    try:
+        corps = base64.b64decode(job["body"]) if job["body"] else None
+        r = requests.request(job["method"], CIBLE + job["path"], headers=job["headers"],
+                             data=corps, timeout=15, allow_redirects=False)
+        h = {"x-status": str(r.status_code), "x-content-type": r.headers.get("Content-Type", "application/octet-stream")}
+        if "Location" in r.headers:
+            h["x-location"] = r.headers["Location"]
+        contenu = r.content
+    except requests.RequestException:
+        h, contenu = {"x-status": "502", "x-content-type": "text/plain"}, b"Appareil injoignable"
+    try:
+        requests.post(URL + "/api/tunnel/respond/" + job["id"], data=contenu,
+                      headers={**H, **h, "Content-Type": "application/octet-stream"}, timeout=20)
+    except requests.RequestException:
+        pass
+
+while True:
+    try:
+        r = requests.get(URL + "/api/tunnel/next", params={"wait": 20}, headers=H, timeout=35)
+        if r.status_code == 200 and r.content:
+            threading.Thread(target=traiter, args=(r.json(),), daemon=True).start()
+    except requests.RequestException:
+        time.sleep(2)` },
+  { id: 'tunnel-esp', title: "Page web locale · ESP32 seul (sans PC)", desc: "Aucun PC ni Raspberry Pi : l'ESP32 sert sa page sur son IP locale et la relaie lui-même vers Pylon, depuis n'importe quel réseau. Écrivez vos pages dans la fonction route() : elles marchent en local ET à distance. Non compilé ni testé sur une carte. Gardez des pages petites.",
+    code: k => AH(k, '#include <WebServer.h>') + `WebServer web(80);
+
+// ===== VOS PAGES : écrivez-les ici, une seule fois =====
+// path = chemin demandé ("/led"), query = paramètres ("v=1&x=2", formulaires POST inclus)
+// Remplissez status et ctype, renvoyez le contenu de la page.
+String route(const String& path, const String& query, int& status, String& ctype) {
+  status = 200; ctype = "text/html; charset=utf-8";
+  if (path == "/") return "<h1>Ma page locale</h1><a href='/led?v=1'>Allumer</a> <a href='/led?v=0'>Éteindre</a>";
+  if (path == "/led") {
+    digitalWrite(2, param(query, "v") == "1" ? HIGH : LOW);
+    ctype = "text/plain"; return "OK";
+  }
+  status = 404; return "Page introuvable";
+}
+
+// Valeur d'un paramètre ("" si absent)
+String param(const String& q, const char* name) {
+  String key = String(name) + "=";
+  int pos = 0;
+  while (pos <= (int)q.length()) {
+    int e = q.indexOf('&', pos); if (e < 0) e = q.length();
+    if (q.startsWith(key, pos)) return q.substring(pos + key.length(), e);
+    pos = e + 1;
+  }
+  return "";
+}
+
+// Accès local : http://IP-de-la-carte/
+void localHandler() {
+  String q = "";
+  for (int i = 0; i < web.args(); i++) q += (i ? "&" : "") + web.argName(i) + "=" + web.arg(i);
+  int st; String ct;
+  String out = route(web.uri(), q, st, ct);
+  web.send(st, ct, out);
+}
+
+// Accès distant : relais des requêtes reçues via Pylon (tâche séparée)
+void tunnelTask(void*) {
+  WiFiClientSecure tt;
+  ${ex_ca().use.replace('tls.', 'tt.')}
+  for (;;) {
+    HTTPClient h;
+    h.begin(tt, String(URL) + "/api/tunnel/next?format=text&wait=20");
+    h.setReuse(true); h.setTimeout(30000);
+    h.addHeader("x-public-key", PUBLIC_KEY); h.addHeader("x-private-key", PRIVATE_KEY);
+    int code = h.GET();
+    String job = code == 200 ? h.getString() : "";
+    h.end();
+    if (job.length() == 0) { vTaskDelay(code > 0 ? 10 : 2000); continue; }
+
+    int a = job.indexOf('\\n'), b = job.indexOf('\\n', a + 1), c = job.indexOf('\\n', b + 1);
+    String id = job.substring(0, a), path = job.substring(b + 1, c), body = job.substring(c + 1);
+    int qm = path.indexOf('?');
+    String p = qm < 0 ? path : path.substring(0, qm);
+    String q = qm < 0 ? "" : path.substring(qm + 1);
+    if (body.length()) q += (q.length() ? "&" : "") + body;
+
+    int st; String ct;
+    String payload = route(p, q, st, ct);
+
+    HTTPClient r;
+    r.begin(tt, String(URL) + "/api/tunnel/respond/" + id);
+    r.addHeader("x-public-key", PUBLIC_KEY); r.addHeader("x-private-key", PRIVATE_KEY);
+    r.addHeader("x-status", String(st));
+    r.addHeader("x-content-type", ct);
+    r.addHeader("Content-Type", "application/octet-stream");
+    r.POST(payload);
+    r.end();
+  }
+}
 
 void setup() {
   Serial.begin(115200);
   pinMode(2, OUTPUT);
-  WiFi.begin(WIFI_SSID, WIFI_PASS);
-  while (WiFi.status() != WL_CONNECTED) delay(300);
-  configTime(0, 0, "pool.ntp.org");
-  ${ca ? 'tls.setCACert(ROOT_CA);' : 'tls.setInsecure();  // remplacez par setCACert(ROOT_CA)'}
+  wifiBegin();
+  web.onNotFound(localHandler);
+  web.begin();
+  Serial.println("Page locale : http://" + WiFi.localIP().toString() + "/");
+  xTaskCreatePinnedToCore(tunnelTask, "tunnel", 16384, NULL, 1, NULL, 0);
+}
+
+void loop() { web.handleClient(); }` },
+  { id: 'dht', title: 'ESP32 · Température et humidité (DHT22)', desc: "Installez la bibliothèque « DHT sensor library » d'Adafruit. Envoie temperature et humidite toutes les 5 s.",
+    code: k => AH(k, '#include <DHT.h>') + `DHT dht(4, DHT22);   // capteur sur la broche 4
+
+void setup() {
+  Serial.begin(115200);
+  dht.begin();
+  wifiBegin();
 }
 
 void loop() {
-  Serial.println(call("/api/device/data", "{\\"temperature\\":21.5}"));
-  String cmds = call("/api/device/commands?format=text&wait=4");
-  if (cmds.indexOf("led=1") >= 0) digitalWrite(2, HIGH);
-  if (cmds.indexOf("led=0") >= 0) digitalWrite(2, LOW);
-}`; },
-  python: k => `import requests
+  float t = dht.readTemperature(), h = dht.readHumidity();
+  if (!isnan(t) && !isnan(h))
+    sendData("{\\"temperature\\":" + String(t, 1) + ",\\"humidite\\":" + String(h, 0) + "}");
+  delay(5000);
+}` },
+  { id: 'analog', title: 'ESP32 · Capteurs analogiques (sol, lumière, gaz)', desc: 'Lit trois entrées analogiques et les envoie. Aucune bibliothèque supplémentaire.',
+    code: k => AH(k) + `void setup() { Serial.begin(115200); wifiBegin(); }
 
-URL = "${API}"
-H = {"x-public-key": "${k.publicKey}", "x-private-key": "${k.privateKey}"}
+void loop() {
+  sendData("{\\"sol\\":" + String(analogRead(34)) + ",\\"lumiere\\":" + String(analogRead(35)) + ",\\"gaz\\":" + String(analogRead(32)) + "}");
+  delay(5000);
+}` },
+  { id: 'relay', title: 'ESP32 · Relais, lampe, prise connectée', desc: "Dans Contrôles, ajoutez un Interrupteur avec le nom de commande relais.",
+    code: k => AH(k) + `const int RELAIS = 26;
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(RELAIS, OUTPUT);
+  wifiBegin();
+}
+
+void loop() {
+  String v = cmd(poll(5), "relais");     // relais = 0 ou 1
+  if (v != "") {
+    digitalWrite(RELAIS, v == "1" ? HIGH : LOW);
+    sendData("{\\"relais\\":" + v + "}");
+  }
+}` },
+  { id: 'servo', title: 'ESP32 · Servomoteur (curseur)', desc: "Installez ESP32Servo. Dans Contrôles, ajoutez un Curseur (min 0, max 180) avec le nom de commande servo.",
+    code: k => AH(k, '#include <ESP32Servo.h>') + `Servo servo;
+
+void setup() {
+  Serial.begin(115200);
+  servo.attach(18);
+  wifiBegin();
+}
+
+void loop() {
+  String v = cmd(poll(5), "servo");
+  if (v != "") servo.write(v.toInt());
+}` },
+  { id: 'car', title: 'ESP32 · Voiture / robot 2 moteurs (L298N)', desc: "Dans Contrôles, ajoutez un Pavé directionnel avec le nom de commande dir. Maintenir une flèche fait avancer ; relâcher arrête. La voiture s'arrête aussi toute seule si la connexion est perdue (1,5 s).",
+    code: k => AH(k) + `const int IN1 = 27, IN2 = 26, IN3 = 25, IN4 = 33, ENA = 14, ENB = 32;
+unsigned long dernier = 0;
+
+void roule(int a, int b, int c, int d) {
+  digitalWrite(IN1, a); digitalWrite(IN2, b); digitalWrite(IN3, c); digitalWrite(IN4, d);
+}
+
+void setup() {
+  Serial.begin(115200);
+  int broches[] = {IN1, IN2, IN3, IN4, ENA, ENB};
+  for (int p : broches) pinMode(p, OUTPUT);
+  digitalWrite(ENA, HIGH); digitalWrite(ENB, HIGH);
+  wifiBegin();
+  dernier = millis();
+}
+
+void loop() {
+  String d = cmd(poll(1), "dir");
+  if (d != "") {
+    dernier = millis();
+    if (d == "avant") roule(1, 0, 1, 0);
+    else if (d == "arriere") roule(0, 1, 0, 1);
+    else if (d == "gauche") roule(0, 1, 1, 0);
+    else if (d == "droite") roule(1, 0, 0, 1);
+    else roule(0, 0, 0, 0);
+  }
+  if (millis() - dernier > 1500) roule(0, 0, 0, 0);   // arrêt de sécurité
+}` },
+  { id: 'cam', title: 'ESP32-CAM · Caméra (images en direct)', desc: "Pour ESP32-CAM AI-Thinker et le noyau ESP32 3.x. Envoie une image toutes les 0,2 s environ ; elle s'affiche dans le panneau Caméra. Pas de son.",
+    code: k => AH(k, CAM_PINS) + `void sendFrame() {
+  camera_fb_t* fb = esp_camera_fb_get();
+  if (!fb) return;
+  HTTPClient http;
+  http.begin(tls, String(URL) + "/api/device/frame");
+  http.setReuse(true);
+  http.addHeader("x-public-key", PUBLIC_KEY);
+  http.addHeader("x-private-key", PRIVATE_KEY);
+  http.addHeader("Content-Type", "image/jpeg");
+  http.POST(fb->buf, fb->len);
+  http.end();
+  esp_camera_fb_return(fb);
+}
+
+void setup() {
+  Serial.begin(115200);
+  camera_config_t c = {};
+  c.ledc_channel = LEDC_CHANNEL_0; c.ledc_timer = LEDC_TIMER_0;
+  c.pin_d0 = Y2_GPIO_NUM; c.pin_d1 = Y3_GPIO_NUM; c.pin_d2 = Y4_GPIO_NUM; c.pin_d3 = Y5_GPIO_NUM;
+  c.pin_d4 = Y6_GPIO_NUM; c.pin_d5 = Y7_GPIO_NUM; c.pin_d6 = Y8_GPIO_NUM; c.pin_d7 = Y9_GPIO_NUM;
+  c.pin_xclk = XCLK_GPIO_NUM; c.pin_pclk = PCLK_GPIO_NUM; c.pin_vsync = VSYNC_GPIO_NUM; c.pin_href = HREF_GPIO_NUM;
+  c.pin_sccb_sda = SIOD_GPIO_NUM; c.pin_sccb_scl = SIOC_GPIO_NUM;
+  c.pin_pwdn = PWDN_GPIO_NUM; c.pin_reset = RESET_GPIO_NUM;
+  c.xclk_freq_hz = 20000000; c.pixel_format = PIXFORMAT_JPEG;
+  c.frame_size = FRAMESIZE_QVGA; c.jpeg_quality = 12; c.fb_count = 1;
+  esp_camera_init(&c);
+  wifiBegin();
+}
+
+void loop() { sendFrame(); delay(200); }` },
+  { id: 'telem', title: 'ESP32 · Télémétrie (GPS, drone, batterie)', desc: "Envoie position, altitude et batterie. Reçoit des ordres de haut niveau (commande mission : retour, atterrir…). Ne pilotez jamais un drone directement par internet.",
+    code: k => AH(k) + `void setup() { Serial.begin(115200); wifiBegin(); }
+
+void loop() {
+  float lat = 0.0, lon = 0.0;   // remplacez par les valeurs de votre module GPS
+  sendData("{\\"lat\\":" + String(lat, 6) + ",\\"lon\\":" + String(lon, 6) + ",\\"altitude\\":12.5,\\"batterie\\":87}");
+  String m = cmd(poll(3), "mission");
+  if (m == "retour") Serial.println("Ordre : retour à la maison");
+  if (m == "atterrir") Serial.println("Ordre : atterrir");
+}` },
+  { id: 'pi-stats', title: 'Raspberry Pi · État du système', desc: 'Température du processeur, charge et occupation du disque. Aucune installation supplémentaire.',
+    code: k => PH(k, 'import os, shutil') + `def cpu_temp():
+    with open("/sys/class/thermal/thermal_zone0/temp") as f:
+        return round(int(f.read()) / 1000, 1)
 
 while True:
-    requests.post(URL + "/api/device/data", json={"temperature": 21.5}, headers=H)
-    r = requests.get(URL + "/api/device/commands", params={"wait": 4}, headers=H)
-    for c in r.json()["commands"]:
-        print(c["name"], c["value"])  # ex. led 1`
-};
+    d = shutil.disk_usage("/")
+    send({"cpu_temp": cpu_temp(), "charge": os.getloadavg()[0], "disque_pct": round(d.used / d.total * 100, 1)})
+    time.sleep(5)` },
+  { id: 'pi-gpio', title: 'Raspberry Pi · Relais et bouton (GPIO)', desc: "Avec gpiozero (déjà installé sur Raspberry Pi OS). Ajoutez un Interrupteur avec le nom de commande relais.",
+    code: k => PH(k, 'from gpiozero import LED, Button') + `relais = LED(17)
+bouton = Button(27)
+
+while True:
+    c = poll(3)
+    if "relais" in c:
+        relais.on() if c["relais"] == "1" else relais.off()
+        send({"relais": 1 if c["relais"] == "1" else 0})
+    send({"bouton": int(bouton.is_pressed)})` },
+  { id: 'pi-dht', title: 'Raspberry Pi · Température et humidité (DHT22)', desc: 'pip install adafruit-circuitpython-dht. Capteur sur la broche GPIO 4.',
+    code: k => PH(k, 'import board, adafruit_dht') + `dht = adafruit_dht.DHT22(board.D4)
+
+while True:
+    try:
+        send({"temperature": dht.temperature, "humidite": dht.humidity})
+    except RuntimeError:
+        pass   # lecture ratée, on réessaie
+    time.sleep(5)` },
+  { id: 'pi-car', title: 'Raspberry Pi · Voiture / robot', desc: "Avec gpiozero. Ajoutez un Pavé directionnel avec le nom de commande dir. Arrêt automatique si la connexion est perdue (1,5 s).",
+    code: k => PH(k, 'from gpiozero import Robot') + `robot = Robot(left=(4, 14), right=(17, 18))   # broches GPIO des moteurs
+actions = {"avant": robot.forward, "arriere": robot.backward, "gauche": robot.left, "droite": robot.right, "stop": robot.stop}
+dernier = time.time()
+
+while True:
+    d = poll(1).get("dir")
+    if d:
+        dernier = time.time()
+        actions.get(d, robot.stop)()
+    if time.time() - dernier > 1.5:
+        robot.stop()   # arrêt de sécurité` },
+  { id: 'pi-cam', title: 'Raspberry Pi · Caméra (images en direct)', desc: 'pip install opencv-python-headless requests. Une image toutes les 0,2 s environ, affichée dans le panneau Caméra. Pas de son.',
+    code: k => PH(k, 'import cv2') + `cam = cv2.VideoCapture(0)
+
+while True:
+    ok, img = cam.read()
+    if ok:
+        img = cv2.resize(img, (480, 360))
+        _, jpg = cv2.imencode(".jpg", img, [cv2.IMWRITE_JPEG_QUALITY, 60])
+        try:
+            requests.post(URL + "/api/device/frame", data=jpg.tobytes(),
+                          headers={**H, "Content-Type": "image/jpeg"}, timeout=10)
+        except requests.RequestException:
+            pass
+    time.sleep(0.2)` }
+];
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const ls = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} } };
-let token = ls.get('pylon_token'), email = ls.get('pylon_email'), sks = {}, cur = null, ws = null, rt = null, state = {}, log = [], lang = 'arduino', mode = 'login';
+let token = ls.get('pylon_token'), email = ls.get('pylon_email'), sks = {}, cur = null, ws = null, rt = null, state = {}, log = [], ex = 'tunnel-esp', mode = 'login', series = {}, controls = [], frameT = 0, shownT = 0, lastSig = '';
 try { sks = JSON.parse(ls.get('pylon_sk') || '{}'); } catch {}
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const hm = t => new Date(t).toLocaleTimeString('fr-FR');
@@ -284,31 +642,60 @@ async function loadProjects() {
   } catch (e) { $('#plist').innerHTML = `<p class="err">${esc(e.message)}</p>`; }
 }
 async function openProject(pk) {
-  closeWs(); cur = pk; view('project');
+  closeWs(); cur = pk; frameT = shownT = 0; view('project');
   try {
     const p = await api('/api/projects/' + pk);
-    state = p.state; log = p.log; $('#pname').textContent = p.name; $('#pk').textContent = pk; setOnline(p.online); render(); connect();
+    state = p.state; log = p.log; series = p.series || {}; controls = p.controls || []; $('#pname').textContent = p.name; $('#pk').textContent = pk; setOnline(p.online); setTunnel(p.tunnel); lastSig = ''; render(); renderControls(); connect();
   } catch (e) { alert(e.message); loadProjects(); }
 }
 const setOnline = on => { const p = $('#pill'); p.classList.toggle('on', !!on); p.textContent = on ? 'Carte en ligne' : 'Carte hors ligne'; };
+const spark = pts => {
+  if (!pts || pts.length < 2) return '';
+  const v = pts.map(p => p[1]), mn = Math.min(...v), mx = Math.max(...v), r = mx - mn || 1;
+  const d = v.map((y, i) => `${(i / (v.length - 1) * 100).toFixed(1)},${(27 - (y - mn) / r * 25).toFixed(1)}`).join(' ');
+  return `<svg viewBox="0 0 100 28" preserveAspectRatio="none" class="spark"><polyline points="${d}" fill="none" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>`;
+};
+function renderCam() {
+  const img = $('#cam');
+  if (frameT && frameT !== shownT) { shownT = frameT; img.src = `${API}/api/projects/${cur}/frame?token=${encodeURIComponent(token)}&t=${frameT}`; img.hidden = false; $('#camempty').hidden = true; }
+  if (!frameT) { img.hidden = true; $('#camempty').hidden = false; }
+}
+function renderControls() {
+  $('#controls').innerHTML = controls.length ? controls.map((c, i) => {
+    const x = `<button class="cx" data-delc="${i}" aria-label="Supprimer">×</button>`;
+    if (c.type === 'switch') return `<div class="ctl"><span>${esc(c.label)}</span><label class="sw"><input type="checkbox" data-sw="${i}"><i></i></label>${x}</div>`;
+    if (c.type === 'slider') return `<div class="ctl col"><span>${esc(c.label)} <b id="sv${i}">${c.min}</b></span><input type="range" min="${c.min}" max="${c.max}" value="${c.min}" data-sl="${i}">${x}</div>`;
+    if (c.type === 'dpad') return `<div class="ctl col"><span>${esc(c.label)}</span><div class="dpad"><button data-dp="${i}" data-v="avant">▲</button><button data-dp="${i}" data-v="gauche">◀</button><button data-dp="${i}" data-v="stop">■</button><button data-dp="${i}" data-v="droite">▶</button><button data-dp="${i}" data-v="arriere">▼</button></div>${x}</div>`;
+    return `<div class="ctl"><span>${esc(c.label)}</span><button class="btn sm" data-bt="${i}">Envoyer</button>${x}</div>`;
+  }).join('') : "<p class='empty'>Ajoutez des boutons, interrupteurs, curseurs ou un pavé directionnel.</p>";
+}
 function render() {
   const e = Object.entries(state), sk = sks[cur];
-  $('#values').innerHTML = e.length ? e.map(([k, o]) => `<div class="val"><span class="k">${esc(k)}</span><b>${esc(show(o.v))}</b><time>${hm(o.t)}</time></div>`).join('')
-    : "<p class='empty'>Aucune valeur reçue. Copiez le code ci-dessous dans votre carte : les valeurs apparaissent dès le premier envoi.</p>";
+  $('#values').innerHTML = e.length ? e.map(([k, o]) => `<div class="val"><span class="k">${esc(k)}</span><b>${esc(show(o.v))}</b>${spark(series[k])}<time>${hm(o.t)}</time></div>`).join('')
+    : "<p class='empty'>Aucune valeur reçue. Copiez un des codes ci-dessous dans votre carte : les valeurs apparaissent dès le premier envoi.</p>";
   $('#log').innerHTML = log.slice(-30).reverse().map(l => `<li><span>${hm(l.t)}</span><span class="${l.kind}">${l.kind === 'in' ? 'reçu' : 'envoyé'}</span><span>${esc(show(l.data))}</span></li>`).join('') || '<li class="muted">Rien pour le moment.</li>';
   $('#keybox').innerHTML = sk ? `<div><b>Clé privée</b><code>${esc(sk)}</code></div><button class="btn sm" id="copysk">Copier</button>`
     : "<div><b>Clé privée</b><span class='muted'>Non affichable : elle n'est conservée que sous forme chiffrée. Régénérez-la si vous l'avez perdue.</span></div>";
-  $('#snip').textContent = snippets[lang]({ publicKey: cur, privateKey: sk || 'sk_VOTRE_CLE_PRIVEE' });
+  const sig = ex + cur + sk;
+  if (sig !== lastSig) {
+    lastSig = sig;
+    const x = EXAMPLES.find(z => z.id === ex) || EXAMPLES[0];
+    if (!$('#ex').options.length) $('#ex').innerHTML = EXAMPLES.map(z => `<option value="${z.id}">${esc(z.title)}</option>`).join('');
+    $('#ex').value = x.id; $('#exdesc').textContent = x.desc;
+    $('#snip').textContent = x.code({ publicKey: cur, privateKey: sk || 'sk_VOTRE_CLE_PRIVEE' });
+  }
+  renderCam();
 }
 function connect() {
   clearTimeout(rt); if (ws) { ws.onclose = null; ws.close(); }
   ws = new WebSocket(API.replace(/^http/, 'ws') + `/ws?token=${encodeURIComponent(token)}&pk=${cur}`);
   ws.onmessage = ev => {
     const m = JSON.parse(ev.data);
-    if (m.type === 'snapshot') { state = m.state; log = m.log; setOnline(m.online); }
-    if (m.type === 'data') { for (const k in m.data) state[k] = { v: m.data[k], t: m.t }; log.push({ t: m.t, kind: 'in', data: m.data }); }
+    if (m.type === 'snapshot') { state = m.state; log = m.log; series = m.series || {}; frameT = m.frame || 0; setOnline(m.online); setTunnel(m.tunnel); }
+    if (m.type === 'data') { for (const k in m.data) { state[k] = { v: m.data[k], t: m.t }; if (typeof m.data[k] === 'number') { (series[k] = series[k] || []).push([m.t, m.data[k]]); series[k] = series[k].slice(-100); } } log.push({ t: m.t, kind: 'in', data: m.data }); }
     if (m.type === 'command') log.push({ t: m.t, kind: 'out', data: m.data });
-    if (m.type === 'status') setOnline(m.online);
+    if (m.type === 'status') { setOnline(m.online); if (m.tunnel !== undefined) setTunnel(m.tunnel); }
+    if (m.type === 'frame') frameT = m.t;
     render();
   };
   ws.onclose = () => { setOnline(false); if (cur && token) rt = setTimeout(connect, 2500); };
@@ -320,7 +707,6 @@ document.addEventListener('click', e => {
   const a = t.closest('[data-auth]'); if (a) return openAuth(a.dataset.auth);
   const m = t.closest('[data-mode]'); if (m) return openAuth(m.dataset.mode);
   const c = t.closest('[data-open]'); if (c) return openProject(c.dataset.open);
-  const l = t.closest('[data-lang]'); if (l) { lang = l.dataset.lang; $$('[data-lang]').forEach(x => x.setAttribute('aria-pressed', x === l)); return render(); }
   if (t.closest('#copysk')) copy(sks[cur], t.closest('#copysk'));
 });
 $('#home').onclick = e => { e.preventDefault(); token ? loadProjects() : view('landing'); };
@@ -349,6 +735,45 @@ $('#cmd').onsubmit = async e => {
     const r = await api(`/api/projects/${cur}/command`, 'POST', { name: f.name.value, value: f.value.value });
     msg.textContent = r.online ? 'Commande envoyée.' : 'Commande en attente : la carte la recevra à sa prochaine connexion.';
   } catch (err) { msg.textContent = err.message; }
+};
+let held = null, holdT = null;
+function setTunnel(on) { const p = $('#tpill'); p.classList.toggle('on', !!on); p.textContent = on ? 'Page en ligne' : 'Agent hors ligne'; }
+$('#topen').onclick = async () => {
+  const w = window.open('', '_blank');
+  try { const r = await api(`/api/projects/${cur}/viewlink`, 'POST'); w.location = r.url; } catch (e) { w.close(); alert(e.message); }
+};
+async function send(name, value) {
+  try { const r = await api(`/api/projects/${cur}/command`, 'POST', { name, value: String(value) }); $('#cmdmsg').textContent = r.online ? '' : 'Carte hors ligne : la commande sera livrée à sa prochaine connexion.'; }
+  catch (e) { $('#cmdmsg').textContent = e.message; }
+}
+async function saveControls() { try { await api(`/api/projects/${cur}/controls`, 'PUT', controls); } catch (e) { alert(e.message); } renderControls(); }
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.dataset.sw != null) send(controls[t.dataset.sw].name, t.checked ? 1 : 0);
+  if (t.dataset.sl != null) send(controls[t.dataset.sl].name, t.value);
+  if (t.id === 'ex') { ex = t.value; lastSig = ''; render(); }
+});
+document.addEventListener('input', e => { if (e.target.dataset.sl != null) $('#sv' + e.target.dataset.sl).textContent = e.target.value; });
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-bt]');
+  if (b) { const c = controls[b.dataset.bt]; return send(c.name, c.value || 1); }
+  const d = e.target.closest('[data-delc]');
+  if (d) { controls.splice(+d.dataset.delc, 1); await saveControls(); }
+});
+document.addEventListener('pointerdown', e => {
+  const b = e.target.closest('[data-dp]'); if (!b) return;
+  const c = controls[b.dataset.dp], v = b.dataset.v;
+  send(c.name, v);
+  if (v !== 'stop') { held = c; holdT = setInterval(() => send(c.name, v), 400); }
+});
+const release = () => { if (held) { clearInterval(holdT); send(held.name, 'stop'); held = null; } };
+document.addEventListener('pointerup', release); document.addEventListener('pointercancel', release);
+$('#addc').onclick = () => $('#ctldlg').showModal();
+$('#ctl-cancel').onclick = () => $('#ctldlg').close();
+$('#f-ctl').onsubmit = async e => {
+  e.preventDefault(); const f = e.target;
+  controls.push({ type: f.ctype.value, label: f.label.value || f.cname.value, name: f.cname.value.trim(), min: +f.min.value || 0, max: f.max.value === '' ? 100 : +f.max.value, value: f.value.value || '1' });
+  f.reset(); $('#ctldlg').close(); await saveControls();
 };
 token ? loadProjects() : view('landing');
 </script>
