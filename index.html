@@ -4,152 +4,164 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Pylon – Pilotez vos cartes ESP32 et Raspberry Pi à distance</title>
-<meta name="description" content="Générez une paire de clés, collez-la dans votre code et contrôlez votre carte en temps réel depuis n'importe quel réseau.">
+<meta name="description" content="Créez un compte, générez vos clés et contrôlez vos cartes en temps réel depuis n'importe quel réseau.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--paper:#EBF0F5;--card:#fff;--ink:#14212F;--mute:#5B6B7C;--line:#D5DDE6;--blue:#2A55E5;--ok:#15935F;--bad:#B4412F;
+:root{--bg:#070B14;--s1:#0E1526;--line:#1F2B47;--tx:#E8EEF8;--mu:#8696B3;--a:#4F7CFF;--b:#22D3EE;--ok:#34D399;--bad:#F87171;
 --head:"Bricolage Grotesque",system-ui,sans-serif;--body:"IBM Plex Sans",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace}
 *{box-sizing:border-box}[hidden]{display:none!important}
 html{scroll-behavior:smooth}
-body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.6 var(--body)}
-h1,h2,h3{font-family:var(--head);line-height:1.12;margin:0 0 .5em;letter-spacing:-.02em}
-a{color:var(--blue)}
-:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
-.top{display:flex;justify-content:space-between;align-items:center;padding:18px clamp(20px,5vw,64px)}
-.top nav{display:flex;gap:22px;align-items:center}.top nav a{color:var(--ink);text-decoration:none;font-weight:500}
-.brand{display:flex;align-items:center;gap:8px;font:800 22px var(--head);color:var(--ink);text-decoration:none}
-.btn{font:500 15px var(--body);padding:10px 18px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
-.btn:hover{border-color:var(--ink)}.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}.btn.primary:hover{background:#1f43c0}
-.btn.small{padding:6px 12px;font-size:14px}
+body{margin:0;color:var(--tx);font:16px/1.6 var(--body);min-height:100vh;
+background:radial-gradient(900px 520px at 85% -10%,rgba(79,124,255,.28),transparent),radial-gradient(700px 420px at -10% 8%,rgba(34,211,238,.13),transparent),var(--bg) fixed}
+h1,h2,h3{font-family:var(--head);line-height:1.1;margin:0 0 .5em;letter-spacing:-.02em}
+a{color:var(--b)}code{font-family:var(--mono)}
+:focus-visible{outline:2px solid var(--b);outline-offset:2px}
+.muted{color:var(--mu)}.err{color:var(--bad);font-size:14px;margin:6px 0 0;min-height:1.2em}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:18px clamp(20px,5vw,64px);position:sticky;top:0;z-index:5;background:rgba(7,11,20,.7);backdrop-filter:blur(14px);border-bottom:1px solid rgba(31,43,71,.6)}
+.top nav,.top nav>span{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.top nav>a{color:var(--mu);text-decoration:none;font-weight:500;margin-right:8px}.top nav>a:hover{color:var(--tx)}
+.who{color:var(--mu);font-size:14px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.brand{display:flex;align-items:center;gap:10px;font:800 22px var(--head);color:var(--tx);text-decoration:none}
+.brand i{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,var(--a),var(--b));color:#04101F}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 22px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--tx);font:500 15px var(--body);cursor:pointer;transition:.2s}
+.btn:hover{border-color:#3A4D78;background:rgba(255,255,255,.09);transform:translateY(-1px)}
+.btn.primary{border:0;background:linear-gradient(135deg,var(--a),var(--b));color:#04101F;font-weight:600;box-shadow:0 8px 28px -8px rgba(34,211,238,.55)}
+.btn.primary:hover{box-shadow:0 12px 34px -8px rgba(34,211,238,.8);filter:brightness(1.06)}
+.btn.danger{color:var(--bad);border-color:rgba(248,113,113,.35)}.btn.danger:hover{background:rgba(248,113,113,.1);border-color:var(--bad)}
+.btn.sm{padding:7px 15px;font-size:13.5px}.btn.lg{padding:14px 28px;font-size:16px}
 .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-.hero{display:grid;grid-template-columns:1.05fr 1fr;gap:clamp(24px,5vw,72px);align-items:center;padding:clamp(32px,7vw,96px) clamp(20px,5vw,64px)}
-.hero h1{font-size:clamp(2.4rem,5.4vw,4.4rem);font-weight:800}
-.lead{font-size:1.15rem;color:var(--mute);max-width:46ch;margin:0 0 28px}
-.code{background:var(--ink);color:#DCE6F2;font:400 14px/1.75 var(--mono);padding:24px;border-radius:14px;overflow-x:auto;margin:0;white-space:pre}
-.code .c{color:#7F93A9}.code b{color:#7DE0B0;font-weight:500}
-.steps,.compat{padding:56px clamp(20px,5vw,64px);max-width:1200px}
-.steps h2,.compat h2{font-size:clamp(1.6rem,3vw,2.2rem);max-width:24ch}
-.steps ol{list-style:none;counter-reset:s;margin:32px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--ink)}
-.steps li{counter-increment:s;padding:22px 24px 0 0}
-.steps li::before{content:counter(s);font:500 14px var(--mono);color:var(--blue)}
-.steps h3{font-size:1.2rem;margin:.4em 0}.steps p,.compat p{color:var(--mute);margin:0;max-width:44ch}
-footer{padding:40px clamp(20px,5vw,64px);color:var(--mute);font-size:14px}
-/* tableau de bord */
-#app{padding:8px clamp(20px,5vw,64px) 48px;max-width:1280px;margin:auto}
-.bar{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:24px}
-.bar h1{font-size:2rem;margin:0}.bar code{font:14px var(--mono);color:var(--mute)}
-.pill{padding:6px 14px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:14px;display:flex;align-items:center;gap:8px}
-.pill::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--bad)}
-.pill.on::before{background:var(--ok);animation:pulse 2s infinite}
-@keyframes pulse{50%{box-shadow:0 0 0 5px rgba(21,147,95,.2)}}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px;min-width:0}
-.panel.wide{grid-column:span 2}.panel h2{font-size:1.15rem}
+.wrap{max-width:1240px;margin:auto;padding:0 clamp(20px,5vw,64px)}
+.hero{display:grid;grid-template-columns:1.05fr 1fr;gap:clamp(24px,5vw,72px);align-items:center;padding:clamp(40px,8vw,110px) 0 60px}
+.hero h1{font-size:clamp(2.5rem,5.6vw,4.6rem);font-weight:800}
+.hero h1 span{background:linear-gradient(135deg,#fff,#9FB4FF 60%,var(--b));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font-size:1.15rem;color:var(--mu);max-width:48ch;margin:0 0 30px}
+.win{background:#060A12;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 30px 80px -30px rgba(79,124,255,.45)}
+.win .bar2{display:flex;gap:7px;padding:14px 16px;border-bottom:1px solid var(--line)}.win .bar2 i{width:11px;height:11px;border-radius:50%;background:#2A3856}
+.win pre{margin:0;padding:22px;font:13.5px/1.8 var(--mono);color:#D6E2F5;overflow-x:auto}
+.win .c{color:#5F7396}.win b{color:var(--ok);font-weight:500}
+.feats{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding:30px 0}
+.panel,.feat{background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));border:1px solid var(--line);border-radius:20px;padding:26px;min-width:0}
+.feat .ic{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;background:rgba(79,124,255,.15);color:var(--b);margin-bottom:16px}
+.feat h3{font-size:1.2rem}.feat p{margin:0;color:var(--mu)}
+.cta{margin:50px 0 70px;text-align:center;padding:56px 24px;border-radius:26px;border:1px solid var(--line);background:radial-gradient(500px 220px at 50% 0,rgba(79,124,255,.25),transparent),var(--s1)}
+.cta h2{font-size:clamp(1.7rem,3.4vw,2.6rem)}.cta p{color:var(--mu);margin:0 0 26px}
+footer{padding:36px clamp(20px,5vw,64px);color:var(--mu);font-size:14px;text-align:center}
+.page{padding:36px 0 70px}
+.phead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:26px}
+.phead h1{font-size:clamp(1.8rem,3.5vw,2.6rem);margin:0}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px}
+.card{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015));border:1px solid var(--line);border-radius:20px;padding:22px;cursor:pointer;transition:.22s}
+.card:hover{transform:translateY(-4px);border-color:#3A5CC0;box-shadow:0 18px 40px -22px rgba(79,124,255,.7)}
+.card h3{font-size:1.25rem;margin:0}.card code{font-size:12.5px;color:var(--mu)}
+.ctop{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px}
+.meta{display:flex;gap:14px;flex-wrap:wrap;margin-top:16px;font-size:13px;color:var(--mu)}
+.dot{width:11px;height:11px;border-radius:50%;background:#46526E;flex:none}.dot.on{background:var(--ok);box-shadow:0 0 0 4px rgba(52,211,153,.2)}
+.empty-state{grid-column:1/-1;text-align:center;padding:56px 20px;border:1px dashed var(--line);border-radius:20px}
+.empty-state p{color:var(--mu);margin:0}
+.pill{padding:7px 15px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid var(--line);font-size:14px;display:inline-flex;align-items:center;gap:9px}
+.pill::before{content:"";width:9px;height:9px;border-radius:50%;background:#46526E}
+.pill.on::before{background:var(--ok);box-shadow:0 0 0 4px rgba(52,211,153,.22)}
+.back{background:none;border:0;color:var(--mu);cursor:pointer;font:500 14px var(--body);padding:0;margin-bottom:14px}.back:hover{color:var(--tx)}
+.keybox{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:20px;padding:16px 20px;border-radius:16px;border:1px solid rgba(34,211,238,.3);background:rgba(34,211,238,.06)}
+.keybox b{display:block;font-size:13px;color:var(--b);margin-bottom:2px}.keybox code{font-size:13px;word-break:break-all}.keybox .muted{font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}.wide{grid-column:span 2}.panel h2{font-size:1.15rem}
 .vals{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
-.val{border-left:3px solid var(--blue);padding:2px 0 2px 12px;display:flex;flex-direction:column}
-.val .k{font:14px var(--mono);color:var(--mute)}.val b{font:700 1.8rem var(--head);word-break:break-all}.val time{font-size:12px;color:var(--mute)}
-.empty,.hint{color:var(--mute);font-size:14px;margin:8px 0 0}
-label{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:500;margin-bottom:14px}
-input{font:15px var(--body);padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
-.phead{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:14px}.phead h2{margin:0;margin-right:auto}
-.tabs{display:flex;background:var(--paper);border-radius:8px;padding:3px}
-.tabs button{border:0;background:none;padding:6px 14px;border-radius:6px;font:500 14px var(--body);cursor:pointer;color:var(--mute)}
-.tabs [aria-pressed=true]{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(20,33,47,.15)}
-#snip{max-height:340px;font-size:13px}
+.val{padding:16px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--line);display:flex;flex-direction:column}
+.val .k{font:13px var(--mono);color:var(--mu)}.val b{font:700 1.9rem var(--head);word-break:break-all;background:linear-gradient(135deg,#fff,var(--b));-webkit-background-clip:text;background-clip:text;color:transparent}.val time{font-size:12px;color:var(--mu)}
+.empty{color:var(--mu);font-size:14px;margin:0}
+label{display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:500;margin-bottom:14px}
+input{font:15px var(--body);padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#0A1120;color:var(--tx);transition:.2s}
+input:focus{outline:0;border-color:var(--a);box-shadow:0 0 0 3px rgba(79,124,255,.25)}
+.ph{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}.ph h2{margin:0 auto 0 0}
+.tabs{display:flex;background:rgba(255,255,255,.05);border-radius:999px;padding:4px;gap:2px}
+.tabs button{border:0;background:none;padding:7px 16px;border-radius:999px;font:500 14px var(--body);cursor:pointer;color:var(--mu);transition:.2s}
+.tabs [aria-pressed=true]{background:linear-gradient(135deg,var(--a),var(--b));color:#04101F;font-weight:600}
+.code{background:#060A12;border:1px solid var(--line);color:#D6E2F5;font:13px/1.75 var(--mono);padding:20px;border-radius:14px;overflow:auto;margin:0;white-space:pre;max-height:340px}
 .log{list-style:none;margin:0;padding:0;max-height:300px;overflow:auto;font:13px/1.5 var(--mono)}
-.log li{padding:6px 0;border-bottom:1px solid var(--line);display:flex;gap:10px}.log .in{color:var(--ok)}.log .out{color:var(--blue)}
-dialog{border:0;border-radius:14px;padding:0;width:min(420px,92vw);box-shadow:0 20px 60px rgba(20,33,47,.3)}
-dialog::backdrop{background:rgba(20,33,47,.5)}.authform{padding:28px}.authform h2{font-size:1.5rem}
-#e-create,#e-login{color:var(--bad)}
-@media(max-width:860px){.hero{grid-template-columns:1fr}.steps ol{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.panel.wide{grid-column:auto}}
-@media(prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto!important}}
+.log li{padding:7px 0;border-bottom:1px solid var(--line);display:flex;gap:10px}.log .in{color:var(--ok)}.log .out{color:var(--b)}
+dialog{border:1px solid var(--line);border-radius:22px;padding:0;width:min(430px,92vw);background:var(--s1);color:var(--tx);box-shadow:0 30px 90px rgba(0,0,0,.6)}
+dialog::backdrop{background:rgba(3,6,12,.7);backdrop-filter:blur(4px)}
+.dform{padding:28px}.dform h2{font-size:1.5rem}.dform .btn.primary{width:100%;margin-top:6px}
+.dtabs{display:flex;margin-bottom:22px}.dtabs button{flex:1}
+@media(max-width:900px){.hero,.feats,.grid{grid-template-columns:1fr}.wide{grid-column:auto}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
 <header class="top">
-  <a class="brand" href="/"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2 5 22M12 2l7 20M8 14h8M6.5 19h11M12 2v4"/></svg>Pylon</a>
-  <nav><a href="#fonctionnement" id="navdoc">Fonctionnement</a><button class="btn" id="open">Ouvrir mon espace</button></nav>
+  <a class="brand" href="/" id="home"><i><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 2 5 22M12 2l7 20M8 14h8M6.5 19h11"/></svg></i>Pylon</a>
+  <nav>
+    <a href="#features" id="nav-doc">Fonctionnalités</a>
+    <span id="nav-out"><button class="btn sm" data-auth="login">Se connecter</button><button class="btn primary sm" data-auth="register">Créer un compte</button></span>
+    <span id="nav-in" hidden><button class="btn sm" id="nav-projects">Mes projets</button><span class="who" id="who"></span><button class="btn sm" id="logout">Déconnexion</button></span>
+  </nav>
 </header>
 
-<main id="landing">
+<main id="landing" class="wrap">
   <section class="hero">
     <div>
-      <h1>Votre carte répond, où qu'elle soit.</h1>
-      <p class="lead">Contrôlez un ESP32 ou un Raspberry Pi depuis n'importe quel réseau. Pas de bibliothèque à installer : vous collez deux clés et une adresse dans votre code.</p>
-      <div class="row"><button class="btn primary" data-auth="create">Créer un projet</button><button class="btn" data-auth="login">J'ai déjà mes clés</button></div>
+      <h1><span>Votre carte répond, où qu'elle soit.</span></h1>
+      <p class="lead">Contrôlez un ESP32 ou un Raspberry Pi depuis n'importe quel réseau. Aucune bibliothèque à installer : collez deux clés, une adresse, et c'est connecté.</p>
+      <div class="row"><button class="btn primary lg" data-auth="register">Commencer gratuitement</button><button class="btn lg" data-auth="login">Se connecter</button></div>
     </div>
-    <pre class="code" aria-label="Exemple de configuration"><span class="c">// Dans votre sketch Arduino</span>
-const char* URL         = "https://pylon-api.onrender.com";
+    <div class="win" aria-hidden="true"><div class="bar2"><i></i><i></i><i></i></div>
+<pre><span class="c">// Dans votre sketch Arduino</span>
+const char* URL         = "https://pylon.onrender.com";
 const char* PUBLIC_KEY  = "pk_8f3a1c52d9e04b17";
-const char* PRIVATE_KEY = "sk_••••••••••••••••••••";
+const char* PRIVATE_KEY = "sk_••••••••••••••••";
 
-<span class="c">// Sur le site, la valeur arrive aussitôt</span>
+<span class="c">// Sur votre tableau de bord, en direct</span>
 temperature   <b>23.4</b>     il y a 2 s
-led           <b>1</b>        commande envoyée</pre>
+led           <b>1</b>        commande envoyée</pre></div>
   </section>
-
-  <section class="steps" id="fonctionnement">
-    <h2>De la création du projet à la première commande</h2>
-    <ol>
-      <li><h3>Générez vos clés</h3><p>Créez un projet : le site vous donne une clé publique, une clé privée et l'adresse de votre serveur.</p></li>
-      <li><h3>Collez-les dans votre code</h3><p>Une requête HTTPS suffit. Le code prêt à copier est fourni pour Arduino et pour Python.</p></li>
-      <li><h3>Pilotez en temps réel</h3><p>Les valeurs de la carte s'affichent en direct et vos commandes lui arrivent en moins d'une seconde.</p></li>
-    </ol>
+  <section class="feats" id="features">
+    <div class="feat"><div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M16 7l3 3"/></svg></div><h3>Vos clés, à vous</h3><p>Chaque projet reçoit sa paire de clés. Régénérez une clé perdue en un clic, sans recréer le projet.</p></div>
+    <div class="feat"><div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></div><h3>Temps réel</h3><p>Les valeurs de la carte s'affichent en direct et vos commandes lui parviennent en moins d'une seconde.</p></div>
+    <div class="feat"><div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></div><h3>Connexion vérifiée</h3><p>Un certificat unique, fourni dans le code, garantit que la carte parle bien à votre serveur.</p></div>
   </section>
-
-  <section class="compat">
-    <h2>Fonctionne avec tout ce qui sait faire une requête HTTPS</h2>
-    <p>ESP32, ESP8266, Raspberry Pi, Pico W. La carte et vous pouvez être sur des réseaux différents, chez vous, au bureau ou en 4G.</p>
-  </section>
+  <section class="cta"><h2>Votre première carte en ligne en cinq minutes</h2><p>Créez un compte, copiez le code généré, téléversez.</p><button class="btn primary lg" data-auth="register">Créer mon compte</button></section>
 </main>
 
-<main id="app" hidden>
-  <div class="bar">
-    <div><h1 id="pname"></h1><code id="pkshow"></code></div>
-    <div class="row"><span id="pill" class="pill">Carte hors ligne</span><button class="btn" id="quit">Quitter</button></div>
+<main id="projects" class="wrap page" hidden>
+  <div class="phead"><div><h1>Mes projets</h1><p class="muted" style="margin:6px 0 0">Un projet = une carte (ou un groupe de cartes) et sa paire de clés.</p></div><button class="btn primary" id="newp">+ Nouveau projet</button></div>
+  <div id="plist" class="pgrid"></div>
+</main>
+
+<main id="project" class="wrap page" hidden>
+  <button class="back" id="back">← Mes projets</button>
+  <div class="phead">
+    <div><h1 id="pname"></h1><code id="pk" class="muted"></code></div>
+    <div class="row"><span id="pill" class="pill">Carte hors ligne</span><button class="btn sm" id="regen">Régénérer la clé</button><button class="btn sm danger" id="del">Supprimer</button></div>
   </div>
+  <div class="keybox" id="keybox"></div>
   <div class="grid">
     <section class="panel wide"><h2>Valeurs reçues</h2><div id="values" class="vals"></div></section>
-    <section class="panel">
-      <h2>Envoyer une commande</h2>
-      <form id="cmd">
-        <label>Nom<input name="name" placeholder="led" required autocomplete="off"></label>
-        <label>Valeur<input name="value" placeholder="1" autocomplete="off"></label>
-        <button class="btn primary">Envoyer</button>
-      </form>
-      <p id="cmdmsg" class="hint" role="status"></p>
-    </section>
+    <section class="panel"><h2>Envoyer une commande</h2>
+      <form id="cmd"><label>Nom<input name="name" placeholder="led" required autocomplete="off"></label><label>Valeur<input name="value" placeholder="1" autocomplete="off"></label><button class="btn primary">Envoyer</button></form>
+      <p id="cmdmsg" class="muted" style="font-size:14px;margin:12px 0 0" role="status"></p></section>
     <section class="panel wide">
-      <div class="phead">
-        <h2>Code de connexion</h2>
-        <div class="tabs"><button data-lang="arduino" aria-pressed="true">Arduino</button><button data-lang="python" aria-pressed="false">Raspberry Pi</button></div>
-        <button class="btn small" id="copy">Copier</button>
-      </div>
-      <pre id="snip" class="code"></pre>
-    </section>
+      <div class="ph"><h2>Code de connexion</h2><div class="tabs"><button data-lang="arduino" aria-pressed="true">Arduino</button><button data-lang="python" aria-pressed="false">Raspberry Pi</button></div><button class="btn sm" id="copy">Copier</button></div>
+      <pre id="snip" class="code"></pre></section>
     <section class="panel"><h2>Journal</h2><ul id="log" class="log"></ul></section>
   </div>
 </main>
 
-<dialog id="auth">
-  <form method="dialog" id="f-create" class="authform">
-    <h2>Créer un projet</h2>
-    <label>Nom du projet<input name="name" placeholder="Serre du jardin" required maxlength="40"></label>
-    <p class="hint" id="e-create" role="alert"></p>
-    <div class="row"><button class="btn primary">Générer mes clés</button><button type="button" class="btn" data-close>Annuler</button></div>
-    <p class="hint">Déjà un projet ? <a href="#" data-auth="login">Utiliser mes clés</a></p>
-  </form>
-  <form method="dialog" id="f-login" class="authform" hidden>
-    <h2>Ouvrir mon espace</h2>
-    <label>Clé publique<input name="pk" placeholder="pk_…" required autocomplete="off"></label>
-    <label>Clé privée<input name="sk" type="password" placeholder="sk_…" required autocomplete="off"></label>
-    <p class="hint" id="e-login" role="alert"></p>
-    <div class="row"><button class="btn primary">Ouvrir</button><button type="button" class="btn" data-close>Annuler</button></div>
-    <p class="hint">Pas encore de projet ? <a href="#" data-auth="create">En créer un</a></p>
-  </form>
-</dialog>
+<dialog id="auth"><form id="f-auth" class="dform" method="dialog">
+  <div class="tabs dtabs"><button type="button" data-mode="login">Connexion</button><button type="button" data-mode="register">Inscription</button></div>
+  <label>Adresse email<input name="email" type="email" required autocomplete="email" placeholder="vous@exemple.com"></label>
+  <label>Mot de passe<input name="password" type="password" required minlength="8" autocomplete="current-password" placeholder="8 caractères minimum"></label>
+  <p class="err" id="e-auth" role="alert"></p>
+  <button class="btn primary" id="auth-go">Se connecter</button>
+</form></dialog>
+
+<dialog id="newdlg"><form id="f-new" class="dform" method="dialog">
+  <h2>Nouveau projet</h2>
+  <label>Nom du projet<input name="name" placeholder="Serre du jardin" required maxlength="40" autocomplete="off"></label>
+  <p class="err" id="e-new" role="alert"></p>
+  <div class="row"><button class="btn primary" style="flex:1">Générer mes clés</button><button type="button" class="btn" id="new-cancel">Annuler</button></div>
+</form></dialog>
 
 <footer>© Pylon</footer>
 <script>
@@ -168,21 +180,6 @@ UM/I2O2dgq43mLyjj0xMqTQrbO/7lZsm
 -----END CERTIFICATE-----`;
 // URL de votre backend Render (sans slash final)
 const API = (window.PYLON_API || 'https://pylon-51ch.onrender.com').replace(/\/$/, '');
-const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
-let keys = null, ws = null, rt = null, state = {}, log = [], lang = 'arduino';
-try { keys = JSON.parse(localStorage.getItem('pylon')); } catch {}
-const store = () => { try { keys ? localStorage.setItem('pylon', JSON.stringify(keys)) : localStorage.removeItem('pylon'); } catch {} };
-const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const hm = t => new Date(t).toLocaleTimeString('fr-FR');
-const show = v => typeof v === 'string' ? v : JSON.stringify(v);
-
-async function api(path, opts = {}) {
-  const r = await fetch(API + path, { ...opts, headers: { 'Content-Type': 'application/json', 'x-public-key': keys?.publicKey || '', 'x-private-key': keys?.privateKey || '' } });
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(j.error || 'Le serveur ne répond pas. Réessayez dans un instant.');
-  return j;
-}
-
 const snippets = {
   arduino: k => { const ca = SITE_CA.trim(); return `#include <WiFi.h>
 #include <HTTPClient.h>
@@ -210,6 +207,7 @@ String call(const char* path, const char* body = nullptr) {
 }
 
 void setup() {
+  Serial.begin(115200);
   pinMode(2, OUTPUT);
   WiFi.begin(WIFI_SSID, WIFI_PASS);
   while (WiFi.status() != WL_CONNECTED) delay(300);
@@ -218,7 +216,7 @@ void setup() {
 }
 
 void loop() {
-  call("/api/device/data", "{\\"temperature\\":21.5}");
+  Serial.println(call("/api/device/data", "{\\"temperature\\":21.5}"));
   String cmds = call("/api/device/commands?format=text&wait=4");
   if (cmds.indexOf("led=1") >= 0) digitalWrite(2, HIGH);
   if (cmds.indexOf("led=0") >= 0) digitalWrite(2, LOW);
@@ -234,21 +232,77 @@ while True:
     for c in r.json()["commands"]:
         print(c["name"], c["value"])  # ex. led 1`
 };
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const ls = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} } };
+let token = ls.get('pylon_token'), email = ls.get('pylon_email'), sks = {}, cur = null, ws = null, rt = null, state = {}, log = [], lang = 'arduino', mode = 'login';
+try { sks = JSON.parse(ls.get('pylon_sk') || '{}'); } catch {}
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const hm = t => new Date(t).toLocaleTimeString('fr-FR');
+const show = v => typeof v === 'string' ? v : JSON.stringify(v);
+const saveSk = () => ls.set('pylon_sk', JSON.stringify(sks));
 
-function render() {
-  const e = Object.entries(state);
-  $('#values').innerHTML = e.length
-    ? e.map(([k, o]) => `<div class="val"><span class="k">${esc(k)}</span><b>${esc(show(o.v))}</b><time>${hm(o.t)}</time></div>`).join('')
-    : '<p class="empty">Aucune valeur reçue pour l\'instant. Copiez le code ci-dessous dans votre carte : les valeurs apparaissent dès le premier envoi.</p>';
-  $('#log').innerHTML = log.slice(-30).reverse().map(l => `<li><span>${hm(l.t)}</span><span class="${l.kind}">${l.kind === 'in' ? 'reçu' : 'envoyé'}</span><span>${esc(show(l.data))}</span></li>`).join('') || '<li class="empty">Rien pour le moment.</li>';
-  $('#snip').textContent = snippets[lang](keys);
+async function api(path, method = 'GET', body) {
+  const r = await fetch(API + path, { method, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: body ? JSON.stringify(body) : undefined });
+  const j = await r.json().catch(() => ({}));
+  if (r.status === 401 && token && !path.startsWith('/api/login')) logout();
+  if (!r.ok) throw new Error(j.error || 'Le serveur ne répond pas, réessayez dans un instant.');
+  return j;
+}
+function closeWs() { clearTimeout(rt); if (ws) { ws.onclose = null; ws.close(); ws = null; } }
+function view(v) {
+  ['landing', 'projects', 'project'].forEach(x => $('#' + x).hidden = x !== v);
+  $('#nav-out').hidden = !!token; $('#nav-in').hidden = !token; $('#nav-doc').hidden = !!token;
+  $('#who').textContent = email || ''; window.scrollTo(0, 0);
+}
+function logout() { token = email = null; ls.set('pylon_token', null); ls.set('pylon_email', null); closeWs(); cur = null; view('landing'); }
+
+/* Comptes */
+function openAuth(m) {
+  mode = m; const reg = m === 'register';
+  $$('[data-mode]').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === m));
+  $('#auth-go').textContent = reg ? 'Créer mon compte' : 'Se connecter';
+  $('#f-auth').password.autocomplete = reg ? 'new-password' : 'current-password';
+  $('#e-auth').textContent = '';
+  if (!$('#auth').open) $('#auth').showModal();
+}
+$('#f-auth').onsubmit = async e => {
+  e.preventDefault(); const f = e.target; $('#e-auth').textContent = '';
+  try {
+    const r = await api('/api/' + mode, 'POST', { email: f.email.value, password: f.password.value });
+    token = r.token; email = r.email; ls.set('pylon_token', token); ls.set('pylon_email', email);
+    f.reset(); $('#auth').close(); loadProjects();
+  } catch (err) { $('#e-auth').textContent = err.message; }
+};
+
+/* Projets */
+async function loadProjects() {
+  closeWs(); cur = null; view('projects'); $('#plist').innerHTML = '<p class="muted">Chargement…</p>';
+  try {
+    const l = await api('/api/projects');
+    $('#plist').innerHTML = l.length ? l.map(p => `<article class="card" data-open="${p.pk}"><div class="ctop"><h3>${esc(p.name)}</h3><span class="dot ${p.online ? 'on' : ''}"></span></div><code>${p.pk}</code><div class="meta"><span>${p.online ? 'En ligne' : 'Hors ligne'}</span><span>${p.values} valeur(s)</span><span>${new Date(p.created).toLocaleDateString('fr-FR')}</span></div></article>`).join('')
+      : "<div class='empty-state'><h3>Aucun projet pour l'instant</h3><p>Créez votre premier projet pour obtenir vos clés.</p></div>";
+  } catch (e) { $('#plist').innerHTML = `<p class="err">${esc(e.message)}</p>`; }
+}
+async function openProject(pk) {
+  closeWs(); cur = pk; view('project');
+  try {
+    const p = await api('/api/projects/' + pk);
+    state = p.state; log = p.log; $('#pname').textContent = p.name; $('#pk').textContent = pk; setOnline(p.online); render(); connect();
+  } catch (e) { alert(e.message); loadProjects(); }
 }
 const setOnline = on => { const p = $('#pill'); p.classList.toggle('on', !!on); p.textContent = on ? 'Carte en ligne' : 'Carte hors ligne'; };
-
+function render() {
+  const e = Object.entries(state), sk = sks[cur];
+  $('#values').innerHTML = e.length ? e.map(([k, o]) => `<div class="val"><span class="k">${esc(k)}</span><b>${esc(show(o.v))}</b><time>${hm(o.t)}</time></div>`).join('')
+    : "<p class='empty'>Aucune valeur reçue. Copiez le code ci-dessous dans votre carte : les valeurs apparaissent dès le premier envoi.</p>";
+  $('#log').innerHTML = log.slice(-30).reverse().map(l => `<li><span>${hm(l.t)}</span><span class="${l.kind}">${l.kind === 'in' ? 'reçu' : 'envoyé'}</span><span>${esc(show(l.data))}</span></li>`).join('') || '<li class="muted">Rien pour le moment.</li>';
+  $('#keybox').innerHTML = sk ? `<div><b>Clé privée</b><code>${esc(sk)}</code></div><button class="btn sm" id="copysk">Copier</button>`
+    : "<div><b>Clé privée</b><span class='muted'>Non affichable : elle n'est conservée que sous forme chiffrée. Régénérez-la si vous l'avez perdue.</span></div>";
+  $('#snip').textContent = snippets[lang]({ publicKey: cur, privateKey: sk || 'sk_VOTRE_CLE_PRIVEE' });
+}
 function connect() {
-  clearTimeout(rt);
-  if (ws) { ws.onclose = null; ws.close(); }
-  ws = new WebSocket(API.replace(/^http/, 'ws') + `/ws?pk=${encodeURIComponent(keys.publicKey)}&sk=${encodeURIComponent(keys.privateKey)}`);
+  clearTimeout(rt); if (ws) { ws.onclose = null; ws.close(); }
+  ws = new WebSocket(API.replace(/^http/, 'ws') + `/ws?token=${encodeURIComponent(token)}&pk=${cur}`);
   ws.onmessage = ev => {
     const m = JSON.parse(ev.data);
     if (m.type === 'snapshot') { state = m.state; log = m.log; setOnline(m.online); }
@@ -257,61 +311,46 @@ function connect() {
     if (m.type === 'status') setOnline(m.online);
     render();
   };
-  ws.onclose = () => { setOnline(false); if (keys) rt = setTimeout(connect, 2500); };
+  ws.onclose = () => { setOnline(false); if (cur && token) rt = setTimeout(connect, 2500); };
 }
+async function copy(text, btn) { await navigator.clipboard.writeText(text); const o = btn.textContent; btn.textContent = 'Copié'; setTimeout(() => btn.textContent = o, 1500); }
 
-function openApp(name) {
-  $('#landing').hidden = true; $('#app').hidden = false;
-  $('#pname').textContent = name || 'Mon projet';
-  $('#pkshow').textContent = keys.publicKey;
-  render(); connect();
-}
-function quit() {
-  keys = null; store();
-  if (ws) { ws.onclose = null; ws.close(); }
-  $('#app').hidden = true; $('#landing').hidden = false;
-}
-
-function openAuth(mode) {
-  $('#f-create').hidden = mode !== 'create'; $('#f-login').hidden = mode !== 'login';
-  if (!$('#auth').open) $('#auth').showModal();
-}
 document.addEventListener('click', e => {
-  const a = e.target.closest('[data-auth]'); if (a) { e.preventDefault(); openAuth(a.dataset.auth); }
-  if (e.target.closest('[data-close]')) $('#auth').close();
+  const t = e.target;
+  const a = t.closest('[data-auth]'); if (a) return openAuth(a.dataset.auth);
+  const m = t.closest('[data-mode]'); if (m) return openAuth(m.dataset.mode);
+  const c = t.closest('[data-open]'); if (c) return openProject(c.dataset.open);
+  const l = t.closest('[data-lang]'); if (l) { lang = l.dataset.lang; $$('[data-lang]').forEach(x => x.setAttribute('aria-pressed', x === l)); return render(); }
+  if (t.closest('#copysk')) copy(sks[cur], t.closest('#copysk'));
 });
-$('#open').onclick = () => keys ? openApp() : openAuth('login');
-$('#quit').onclick = quit;
-
-$('#f-create').onsubmit = async e => {
-  e.preventDefault(); $('#e-create').textContent = '';
+$('#home').onclick = e => { e.preventDefault(); token ? loadProjects() : view('landing'); };
+$('#nav-projects').onclick = loadProjects; $('#back').onclick = loadProjects; $('#logout').onclick = logout;
+$('#copy').onclick = e => copy($('#snip').textContent, e.currentTarget);
+$('#newp').onclick = () => { $('#e-new').textContent = ''; $('#newdlg').showModal(); };
+$('#new-cancel').onclick = () => $('#newdlg').close();
+$('#f-new').onsubmit = async e => {
+  e.preventDefault(); $('#e-new').textContent = '';
   try {
-    const r = await api('/api/projects', { method: 'POST', body: JSON.stringify({ name: e.target.name.value }) });
-    keys = { publicKey: r.publicKey, privateKey: r.privateKey, name: r.name }; store();
-    $('#auth').close(); openApp(r.name);
-  } catch (err) { $('#e-create').textContent = err.message; }
+    const r = await api('/api/projects', 'POST', { name: e.target.name.value });
+    sks[r.pk] = r.privateKey; saveSk(); e.target.reset(); $('#newdlg').close(); openProject(r.pk);
+  } catch (err) { $('#e-new').textContent = err.message; }
 };
-$('#f-login').onsubmit = async e => {
-  e.preventDefault(); $('#e-login').textContent = '';
-  keys = { publicKey: e.target.pk.value.trim(), privateKey: e.target.sk.value.trim() };
-  try {
-    const r = await api('/api/state');
-    keys.name = r.name; store(); $('#auth').close(); openApp(r.name);
-  } catch (err) { keys = null; $('#e-login').textContent = err.message; }
+$('#regen').onclick = async () => {
+  if (!confirm("Générer une nouvelle clé privée ? L'ancienne cessera de fonctionner et vos cartes devront être reprogrammées.")) return;
+  try { const r = await api(`/api/projects/${cur}/regenerate`, 'POST'); sks[cur] = r.privateKey; saveSk(); render(); } catch (e) { alert(e.message); }
 };
-
+$('#del').onclick = async () => {
+  if (!confirm('Supprimer ce projet et toutes ses données ? Cette action est définitive.')) return;
+  try { await api('/api/projects/' + cur, 'DELETE'); delete sks[cur]; saveSk(); loadProjects(); } catch (e) { alert(e.message); }
+};
 $('#cmd').onsubmit = async e => {
-  e.preventDefault();
-  const f = e.target, msg = $('#cmdmsg');
+  e.preventDefault(); const f = e.target, msg = $('#cmdmsg');
   try {
-    const r = await api('/api/command', { method: 'POST', body: JSON.stringify({ name: f.name.value, value: f.value.value }) });
+    const r = await api(`/api/projects/${cur}/command`, 'POST', { name: f.name.value, value: f.value.value });
     msg.textContent = r.online ? 'Commande envoyée.' : 'Commande en attente : la carte la recevra à sa prochaine connexion.';
   } catch (err) { msg.textContent = err.message; }
 };
-$$('[data-lang]').forEach(b => b.onclick = () => { lang = b.dataset.lang; $$('[data-lang]').forEach(x => x.setAttribute('aria-pressed', x === b)); render(); });
-$('#copy').onclick = async e => { await navigator.clipboard.writeText($('#snip').textContent); e.target.textContent = 'Copié'; setTimeout(() => e.target.textContent = 'Copier', 1500); };
-
-if (keys) openApp(keys.name);
+token ? loadProjects() : view('landing');
 </script>
 </body>
 </html>
