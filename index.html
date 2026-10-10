@@ -124,7 +124,7 @@ input[type=range]{padding:0;accent-color:var(--b);width:100%}
     </div>
     <div class="win" aria-hidden="true"><div class="bar2"><i></i><i></i><i></i></div>
 <pre><span class="c">// Dans votre sketch Arduino</span>
-const char* URL         = "https://pylon.onrender.com";
+const char* URL         = "https://votre-site.example";
 const char* PUBLIC_KEY  = "pk_8f3a1c52d9e04b17";
 const char* PRIVATE_KEY = "sk_••••••••••••••••";
 
@@ -154,7 +154,8 @@ led           <b>1</b>        commande envoyée</pre></div>
   <div class="keybox" id="keybox"></div>
   <div class="grid">
     <section class="panel full"><div class="ph"><h2>Page web de l'appareil</h2><span id="tpill" class="pill">Agent hors ligne</span><button class="btn primary sm" id="topen">Ouvrir la page</button></div>
-      <p class="muted" style="margin:0;font-size:14px">Rendez accessible de partout la page que votre ESP32 ou Raspberry Pi affiche sur son adresse IP locale. Lancez l'agent (exemple « Page web locale » ci-dessous), puis cliquez sur « Ouvrir la page ».</p></section>
+      <p class="muted" style="margin:0 0 14px;font-size:14px">Lien permanent de la page web de votre appareil (ESP32 ou Raspberry Pi). Lancez l'agent ou le code « Page web locale » ci-dessous, puis ouvrez ce lien depuis n'importe où.</p>
+      <div class="keybox" style="margin:0"><div><b>Lien de la page</b><code id="turl"></code></div><div class="row"><button class="btn sm" id="tcopy">Copier le lien</button><button class="btn sm" id="tmode">Accès</button></div></div></section>
     <section class="panel wide"><h2>Valeurs reçues</h2><div id="values" class="vals"></div></section>
     <section class="panel">
       <div class="ph"><h2>Contrôles</h2><button class="btn sm" id="addc">+ Ajouter</button></div>
@@ -197,21 +198,12 @@ led           <b>1</b>        commande envoyée</pre></div>
 
 <footer>© Pylon</footer>
 <script>
-// Certificat racine (PEM) de votre serveur, partagé par tous les utilisateurs.
-// Obtenez-le avec : openssl s_client -showcerts -connect VOTRE-APP.onrender.com:443 </dev/null
-const SITE_CA = `-----BEGIN CERTIFICATE-----
-MIIB3DCCAYOgAwIBAgINAgPlfvU/k/2lCSGypjAKBggqhkjOPQQDAjBQMSQwIgYDVQQLExtHbG9i
-YWxTaWduIEVDQyBSb290IENBIC0gUjQxEzARBgNVBAoTCkdsb2JhbFNpZ24xEzARBgNVBAMTCkds
-b2JhbFNpZ24wHhcNMTIxMTEzMDAwMDAwWhcNMzgwMTE5MDMxNDA3WjBQMSQwIgYDVQQLExtHbG9i
-YWxTaWduIEVDQyBSb290IENBIC0gUjQxEzARBgNVBAoTCkdsb2JhbFNpZ24xEzARBgNVBAMTCkds
-b2JhbFNpZ24wWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAAS4xnnTj2wlDp8uORkcA6SumuU5BwkW
-ymOxuYb4ilfBV85C+nOh92VC/x7BALJucw7/xyHlGKSq2XE/qNS5zowdo0IwQDAOBgNVHQ8BAf8E
-BAMCAYYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUVLB7rUW44kB/+wpu+74zyTyjhNUwCgYI
-KoZIzj0EAwIDRwAwRAIgIk90crlgr/HmnKAWBVBfw147bmF0774BxL4YSFlhgjICICadVGNA3jdg
-UM/I2O2dgq43mLyjj0xMqTQrbO/7lZsm
------END CERTIFICATE-----`;
-// URL de votre backend Render (sans slash final)
-const API = (window.PYLON_API || 'https://pylon-51ch.onrender.com').replace(/\/$/, '');
+// Certificat racine (PEM) du site, partagé par tous les utilisateurs.
+// Obtenez-le avec cert.ps1 en remplaçant le nom d'hôte par celui de votre site.
+const SITE_CA = ``;
+// Le tableau de bord parle à son propre domaine
+const API = '';
+const PUB = location.origin;   // adresse affichée dans les codes d'exemple
 const ex_ca = () => { const ca = SITE_CA.trim(); return { decl: ca ? 'const char* ROOT_CA = R"CERT(\n' + ca + '\n)CERT";\n' : '', use: ca ? 'tls.setCACert(ROOT_CA);' : 'tls.setInsecure();  // remplacez par setCACert(ROOT_CA)' }; };
 const AH = (k, inc = '') => { const c = ex_ca(); return `#include <WiFi.h>
 #include <HTTPClient.h>
@@ -219,7 +211,7 @@ const AH = (k, inc = '') => { const c = ex_ca(); return `#include <WiFi.h>
 ${inc}
 const char* WIFI_SSID   = "votre_wifi";
 const char* WIFI_PASS   = "votre_mot_de_passe";
-const char* URL         = "${API}";
+const char* URL         = "${PUB}";
 const char* PUBLIC_KEY  = "${k.publicKey}";
 const char* PRIVATE_KEY = "${k.privateKey}";
 
@@ -264,7 +256,7 @@ void wifiBegin() {
 `; };
 const PH = (k, inc = '') => `import time, requests
 ${inc}
-URL = "${API}"
+URL = "${PUB}"
 H = {"x-public-key": "${k.publicKey}", "x-private-key": "${k.privateKey}"}
 
 def send(data):
@@ -303,7 +295,7 @@ const EXAMPLES = [
   { id: 'tunnel-pi', title: "Page web locale · Raspberry Pi (agent Python)", desc: "À lancer sur le Raspberry Pi lui-même (pip install requests) : CIBLE = http://localhost:PORT de votre application web. Aucune autre machine n'est nécessaire. Peut aussi servir de pont vers un ESP32 du même réseau. Puis cliquez sur « Ouvrir la page ».",
     code: k => `import time, base64, threading, requests
 
-URL = "${API}"
+URL = "${PUB}"
 H = {"x-public-key": "${k.publicKey}", "x-private-key": "${k.privateKey}"}
 CIBLE = "http://192.168.1.50"   # adresse locale de votre page : l'ESP32, ou http://localhost:5000 pour une appli de ce Raspberry Pi
 
@@ -592,7 +584,7 @@ while True:
 ];
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const ls = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} } };
-let token = ls.get('pylon_token'), email = ls.get('pylon_email'), sks = {}, cur = null, ws = null, rt = null, state = {}, log = [], ex = 'tunnel-esp', mode = 'login', series = {}, controls = [], frameT = 0, shownT = 0, lastSig = '';
+let token = ls.get('pylon_token'), email = ls.get('pylon_email'), sks = {}, cur = null, ws = null, rt = null, state = {}, log = [], ex = 'tunnel-esp', mode = 'login', series = {}, controls = [], frameT = 0, shownT = 0, lastSig = '', pollId = 0;
 try { sks = JSON.parse(ls.get('pylon_sk') || '{}'); } catch {}
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const hm = t => new Date(t).toLocaleTimeString('fr-FR');
@@ -606,7 +598,7 @@ async function api(path, method = 'GET', body) {
   if (!r.ok) throw new Error(j.error || 'Le serveur ne répond pas, réessayez dans un instant.');
   return j;
 }
-function closeWs() { clearTimeout(rt); if (ws) { ws.onclose = null; ws.close(); ws = null; } }
+function closeWs() { clearTimeout(rt); pollId++; if (ws) { ws.onclose = null; ws.close(); ws = null; } }
 function view(v) {
   ['landing', 'projects', 'project'].forEach(x => $('#' + x).hidden = x !== v);
   $('#nav-out').hidden = !!token; $('#nav-in').hidden = !token; $('#nav-doc').hidden = !!token;
@@ -645,7 +637,7 @@ async function openProject(pk) {
   closeWs(); cur = pk; frameT = shownT = 0; view('project');
   try {
     const p = await api('/api/projects/' + pk);
-    state = p.state; log = p.log; series = p.series || {}; controls = p.controls || []; $('#pname').textContent = p.name; $('#pk').textContent = pk; setOnline(p.online); setTunnel(p.tunnel); lastSig = ''; render(); renderControls(); connect();
+    state = p.state; log = p.log; series = p.series || {}; controls = p.controls || []; $('#pname').textContent = p.name; $('#pk').textContent = pk; setOnline(p.online); setTunnel(p.tunnel); setPage(p.page); lastSig = ''; render(); renderControls(); connect();
   } catch (e) { alert(e.message); loadProjects(); }
 }
 const setOnline = on => { const p = $('#pill'); p.classList.toggle('on', !!on); p.textContent = on ? 'Carte en ligne' : 'Carte hors ligne'; };
@@ -687,18 +679,18 @@ function render() {
   renderCam();
 }
 function connect() {
-  clearTimeout(rt); if (ws) { ws.onclose = null; ws.close(); }
-  ws = new WebSocket(API.replace(/^http/, 'ws') + `/ws?token=${encodeURIComponent(token)}&pk=${cur}`);
-  ws.onmessage = ev => {
-    const m = JSON.parse(ev.data);
-    if (m.type === 'snapshot') { state = m.state; log = m.log; series = m.series || {}; frameT = m.frame || 0; setOnline(m.online); setTunnel(m.tunnel); }
-    if (m.type === 'data') { for (const k in m.data) { state[k] = { v: m.data[k], t: m.t }; if (typeof m.data[k] === 'number') { (series[k] = series[k] || []).push([m.t, m.data[k]]); series[k] = series[k].slice(-100); } } log.push({ t: m.t, kind: 'in', data: m.data }); }
-    if (m.type === 'command') log.push({ t: m.t, kind: 'out', data: m.data });
-    if (m.type === 'status') { setOnline(m.online); if (m.tunnel !== undefined) setTunnel(m.tunnel); }
-    if (m.type === 'frame') frameT = m.t;
-    render();
+  clearTimeout(rt); const my = ++pollId;
+  const tick = async () => {
+    if (my !== pollId || !cur) return;
+    try {
+      const p = await api('/api/projects/' + cur);
+      if (my !== pollId) return;
+      state = p.state; log = p.log; series = p.series || {}; frameT = p.frame || 0;
+      setOnline(p.online); setTunnel(p.tunnel); setPage(p.page); render();
+    } catch (e) {}
+    rt = setTimeout(tick, 2000);
   };
-  ws.onclose = () => { setOnline(false); if (cur && token) rt = setTimeout(connect, 2500); };
+  rt = setTimeout(tick, 2000);
 }
 async function copy(text, btn) { await navigator.clipboard.writeText(text); const o = btn.textContent; btn.textContent = 'Copié'; setTimeout(() => btn.textContent = o, 1500); }
 
@@ -738,9 +730,22 @@ $('#cmd').onsubmit = async e => {
 };
 let held = null, holdT = null;
 function setTunnel(on) { const p = $('#tpill'); p.classList.toggle('on', !!on); p.textContent = on ? 'Page en ligne' : 'Agent hors ligne'; }
+let pageMode = 'private';
+function setPage(m) {
+  pageMode = m === 'public' ? 'public' : 'private';
+  $('#turl').textContent = location.origin + '/t/' + cur + '/';
+  $('#tmode').textContent = pageMode === 'public' ? 'Accès : public (avec le lien)' : 'Accès : protégé (vous seul)';
+}
+$('#tmode').onclick = async () => {
+  const next = pageMode === 'public' ? 'private' : 'public';
+  if (next === 'public' && !confirm("Rendre la page publique ? Toute personne qui connaît le lien pourra l'ouvrir et commander votre appareil, sans compte.")) return;
+  try { await api(`/api/projects/${cur}/page`, 'PUT', { access: next }); setPage(next); } catch (e) { alert(e.message); }
+};
+$('#tcopy').onclick = e => copy($('#turl').textContent, e.currentTarget);
 $('#topen').onclick = async () => {
+  if (pageMode === 'public') return window.open(location.origin + '/t/' + cur + '/', '_blank');
   const w = window.open('', '_blank');
-  try { const r = await api(`/api/projects/${cur}/viewlink`, 'POST'); w.location = r.url; } catch (e) { w.close(); alert(e.message); }
+  try { const r = await api(`/api/projects/${cur}/viewlink`, 'POST'); w.location = location.origin + r.path; } catch (e) { w.close(); alert(e.message); }
 };
 async function send(name, value) {
   try { const r = await api(`/api/projects/${cur}/command`, 'POST', { name, value: String(value) }); $('#cmdmsg').textContent = r.online ? '' : 'Carte hors ligne : la commande sera livrée à sa prochaine connexion.'; }
