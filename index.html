@@ -226,8 +226,7 @@ JzVcoyi3B43njTOQ5yOf+1CceWxG1bQVs5ZufpsMljq4Ui0/1lvh+wjChP4kqKOJ2qxq4RgqsahD
 YVvTH9w7jXbyLeiNdd8XM2w9U/t7y0Ff/9yi0GE44Za4rF2LN9d11TPAmRGunUHBcnWEvgJBQl9n
 JEiU0Zsnvgc/ubhPgXRR4Xq37Z0j4r7g1SgEEzwxA57demyPxgcYxn/eR44/KJ4EBs+lVDR3veyJ
 m+kXQ99b21/+jh5Xos1AnX5iItreGCc=
------END CERTIFICATE-----
-`;
+-----END CERTIFICATE-----`;
 // Le tableau de bord parle à son propre domaine
 const API = '';
 const PUB = location.origin;   // adresse affichée dans les codes d'exemple
@@ -277,6 +276,7 @@ void wifiBegin() {
   WiFi.begin(WIFI_SSID, WIFI_PASS);
   while (WiFi.status() != WL_CONNECTED) delay(300);
   configTime(0, 0, "pool.ntp.org");
+  while (time(nullptr) < 1700000000) delay(200);   // attend l'heure : nécessaire à la vérification du certificat
   ${c.use}
 }
 
@@ -353,6 +353,18 @@ while True:
   { id: 'tunnel-esp', title: "Page web locale · ESP32 seul (sans PC)", desc: "Aucun PC ni Raspberry Pi : l'ESP32 sert sa page sur son IP locale et la relaie lui-même vers Pylon, depuis n'importe quel réseau. Écrivez vos pages dans la fonction route() : elles marchent en local ET à distance. Non compilé ni testé sur une carte. Gardez des pages petites.",
     code: k => AH(k, '#include <WebServer.h>') + `WebServer web(80);
 
+// Valeur d'un paramètre ("" si absent)
+String param(const String& q, const char* name) {
+  String key = String(name) + "=";
+  int pos = 0;
+  while (pos <= (int)q.length()) {
+    int e = q.indexOf('&', pos); if (e < 0) e = q.length();
+    if (q.startsWith(key, pos)) return q.substring(pos + key.length(), e);
+    pos = e + 1;
+  }
+  return "";
+}
+
 // ===== VOS PAGES : écrivez-les ici, une seule fois =====
 // path = chemin demandé ("/led"), query = paramètres ("v=1&x=2", formulaires POST inclus)
 // Remplissez status et ctype, renvoyez le contenu de la page.
@@ -364,18 +376,6 @@ String route(const String& path, const String& query, int& status, String& ctype
     ctype = "text/plain"; return "OK";
   }
   status = 404; return "Page introuvable";
-}
-
-// Valeur d'un paramètre ("" si absent)
-String param(const String& q, const char* name) {
-  String key = String(name) + "=";
-  int pos = 0;
-  while (pos <= (int)q.length()) {
-    int e = q.indexOf('&', pos); if (e < 0) e = q.length();
-    if (q.startsWith(key, pos)) return q.substring(pos + key.length(), e);
-    pos = e + 1;
-  }
-  return "";
 }
 
 // Accès local : http://IP-de-la-carte/
